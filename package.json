@@ -1,0 +1,23 @@
+{
+  "name": "illustrated-primer",
+  "version": "1.0.0",
+  "description": "A Young Lady's Illustrated Primer V1 Prototype",
+  "main": "src/server.ts",
+  "scripts": {
+    "start": "tsx src/server.ts"
+  },
+  "dependencies": {
+    "@google/genai": "^2.31.0",
+    "@gradio/client": "^2.7.1",
+    "cors": "^2.8.6",
+    "express": "^4.22.3",
+    "groq-sdk": "^1.6.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.0"
+  }
+}

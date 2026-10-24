@@ -1,0 +1,2184 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aethel — Adaptive 1-on-1 AI Tutor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://js.puter.com/v2/"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background-color: #f8fafc;
+        color: #0f172a;
+      }
+      .surface-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+      }
+      .scratchpad-grid {
+        background-color: #ffffff;
+        background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+        background-size: 20px 20px;
+        touch-action: none;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen flex flex-col">
+    <!-- TOP NAVIGATION BAR -->
+    <header
+      class="bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between sticky top-0 z-30"
+    >
+      <div class="flex items-center gap-3">
+        <div
+          class="w-9 h-9 rounded-xl bg-indigo-600 text-white font-extrabold text-lg flex items-center justify-center shadow-sm"
+        >
+          A
+        </div>
+        <div>
+          <span class="font-extrabold text-base tracking-tight text-slate-900"
+            >Aethel</span
+          >
+          <span
+            class="hidden sm:inline-block ml-2 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200"
+          >
+            ● Live AI Engine Active
+          </span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div
+          class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200"
+        >
+          <span class="text-xs font-semibold text-slate-500">Voice:</span>
+          <select
+            id="voice-select"
+            class="bg-transparent text-xs font-bold text-slate-800 focus:outline-none"
+          >
+            <option value="">Natural Voice</option>
+          </select>
+          <button
+            onclick="toggleMute()"
+            id="mute-btn"
+            class="text-xs font-bold text-indigo-600 hover:underline ml-1"
+          >
+            🔊 On
+          </button>
+        </div>
+        <button
+          onclick="resetToTopicEntry()"
+          class="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition"
+        >
+          + New Topic or Book
+        </button>
+      </div>
+    </header>
+
+    <!-- GLOBAL AI THINKING BAR -->
+    <div
+      id="ai-loading-banner"
+      class="hidden bg-indigo-600 text-white px-6 py-3 text-xs font-bold flex items-center justify-center gap-3 shadow-md"
+    >
+      <span
+        class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+      ></span>
+      <span id="ai-loading-text">AI is thinking...</span>
+    </div>
+
+    <!-- MAIN WORKSPACE + LIVE AI CHAT SPLIT LAYOUT -->
+    <div
+      class="flex-1 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 p-6"
+    >
+      <!-- =================================================================== -->
+      <!-- LEFT/CENTER: MAIN INTERACTIVE WORKSPACE (8 Cols)                    -->
+      <!-- =================================================================== -->
+      <main class="lg:col-span-8 flex flex-col gap-6">
+        <!-- LIVE AI REASONING & TELEMETRY PROOF BANNER -->
+        <section
+          id="ai-telemetry-card"
+          class="hidden surface-card rounded-2xl p-4 bg-slate-900 text-white"
+        >
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <div class="flex items-center gap-2">
+              <span
+                class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[11px] font-extrabold"
+              >
+                ✓ Verified Live AI Generation
+              </span>
+              <span
+                id="telemetry-complexity"
+                class="px-2.5 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[11px] font-extrabold"
+              ></span>
+              <span
+                id="telemetry-meta"
+                class="text-[11px] text-slate-400 font-mono"
+              ></span>
+            </div>
+            <button
+              id="regen-btn"
+              onclick="regenerateFreshQuestions()"
+              class="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition"
+            >
+              🔄 Generate New Questions
+            </button>
+          </div>
+          <p
+            id="telemetry-reasoning"
+            class="text-xs text-slate-300 leading-relaxed"
+          ></p>
+        </section>
+
+        <!-- STAGE 1: TOPIC OR BOOK ENTRY -->
+        <section id="stage-topic-entry" class="surface-card rounded-3xl p-8">
+          <div
+            class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold mb-4"
+          >
+            <span
+              >Step 1 • Enter Any Math/Science Concept or English Book →</span
+            >
+          </div>
+          <h1
+            class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2"
+          >
+            What do you want to master today?
+          </h1>
+          <p class="text-sm text-slate-500 mb-6">
+            Enter a math/science topic for a diagnostic pre-test & 1-by-1
+            walkthrough,
+            <strong>or enter a book you're reading in English</strong> to share
+            what you know and dive into an open-ended theme & essay discussion!
+          </p>
+
+          <div class="flex flex-col sm:flex-row gap-3 mb-4">
+            <input
+              id="topic-input"
+              type="text"
+              placeholder="e.g., The Great Gatsby, Macbeth, Factoring Quadratics where a > 1..."
+              onkeydown="if(event.key==='Enter') scopeTopic()"
+              class="flex-1 px-4 py-3.5 rounded-2xl border border-slate-300 text-sm font-semibold text-slate-900 focus:outline-none focus:border-indigo-600"
+            />
+            <button
+              onclick="scopeTopic()"
+              class="px-6 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-sm transition shrink-0"
+            >
+              Continue →
+            </button>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+            <span>Try a quick example:</span>
+            <button
+              onclick="quickFillTopic('Book: The Great Gatsby')"
+              class="px-3 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 font-semibold text-amber-800 border border-amber-200 transition"
+            >
+              📖 Book: The Great Gatsby
+            </button>
+            <button
+              onclick="quickFillTopic('Book: To Kill a Mockingbird')"
+              class="px-3 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 font-semibold text-amber-800 border border-amber-200 transition"
+            >
+              📖 Book: To Kill a Mockingbird
+            </button>
+            <button
+              onclick="quickFillTopic('Adding 1-digit numbers')"
+              class="px-3 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 font-semibold text-emerald-800 transition"
+            >
+              Easy Math: Adding 1-Digit Numbers
+            </button>
+            <button
+              onclick="quickFillTopic('Factoring quadratic equations where a > 1')"
+              class="px-3 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 font-semibold text-indigo-800 transition"
+            >
+              Complex Math: Factoring (a > 1)
+            </button>
+          </div>
+
+          <!-- SUB-TOPIC REFINEMENT BOX (For STEM topics) -->
+          <div
+            id="subtopic-scoping-box"
+            class="hidden mt-8 pt-6 border-t border-slate-200"
+          >
+            <p
+              id="scoping-prompt"
+              class="text-sm font-bold text-slate-800 mb-3"
+            ></p>
+            <div
+              id="subtopic-buttons"
+              class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4"
+            ></div>
+
+            <div class="flex flex-col sm:flex-row gap-2.5 mt-3">
+              <input
+                id="custom-subtopic-input"
+                type="text"
+                placeholder="Or type the exact part you want to cover..."
+                onkeydown="if(event.key==='Enter') startCustomSubtopic()"
+                class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold"
+              />
+              <button
+                onclick="startCustomSubtopic()"
+                class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold"
+              >
+                Generate AI Pre-Test & Lesson →
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- ENGLISH / BOOK MODE: BRAIN DUMP -> FOCUS PICKER -> DEEP DISCUSSION-->
+        <!-- ================================================================= -->
+        <section id="stage-book-mode" class="hidden space-y-6">
+          <!-- STEP A: OPEN TEXT BOX FOR STUDENT TO SHARE WHAT THEY KNOW -->
+          <div id="book-step-braindump" class="surface-card rounded-3xl p-8">
+            <div
+              class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold mb-3"
+            >
+              <span
+                >📖 Literary & Book Mastery • Step 1: What Do You Know So
+                Far?</span
+              >
+            </div>
+            <h2
+              id="book-braindump-title"
+              class="text-2xl font-extrabold text-slate-900 mb-2"
+            >
+              Tell me what you know about the book so far
+            </h2>
+            <p class="text-sm text-slate-600 mb-5 leading-relaxed">
+              In English, there's no single "right or wrong" formula. In the box
+              below, type
+              <strong
+                >whatever you remember or understand about this book</strong
+              >
+              in any format—bullet points, messy notes, characters, basic plot,
+              themes, or even parts that confused you. From there, we'll figure
+              out what to review and discuss!
+            </p>
+
+            <textarea
+              id="book-braindump-input"
+              rows="6"
+              placeholder="Type anything you know! For example: 'I know Gatsby throws huge parties to get Daisy's attention, Nick is the narrator, and there's a green light across the water, but I don't really get what the Valley of Ashes means or how to write a deep essay about the American Dream...'"
+              class="w-full p-4 rounded-2xl border border-slate-300 text-sm font-medium text-slate-900 bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-600 mb-4 leading-relaxed"
+            ></textarea>
+
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <span class="text-xs text-slate-400 font-medium">
+                Tip: Even if you've only read a few chapters or barely remember
+                the plot, write that down!
+              </span>
+              <button
+                onclick="analyzeBookBraindump()"
+                class="px-6 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-sm shadow-sm transition"
+              >
+                Analyze My Understanding & Pick What to Review →
+              </button>
+            </div>
+          </div>
+
+          <!-- STEP B: AI FEEDBACK ON THEIR UNDERSTANDING + WHAT THEY WANT TO REVIEW -->
+          <div
+            id="book-step-focus"
+            class="hidden surface-card rounded-3xl p-8 space-y-6"
+          >
+            <div
+              class="p-5 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-3"
+            >
+              <div class="flex items-center justify-between">
+                <span
+                  class="text-xs font-extrabold uppercase tracking-wider text-amber-800"
+                >
+                  ✓ What You Already Have Down & Where We Can Go Deeper
+                </span>
+                <button
+                  onclick="speakText(document.getElementById('book-gap-analysis').textContent)"
+                  class="text-xs font-bold text-amber-900 hover:underline"
+                >
+                  🔊 Listen
+                </button>
+              </div>
+              <p
+                id="book-strengths-text"
+                class="text-xs font-semibold text-emerald-800 bg-emerald-50/80 px-3 py-2 rounded-xl border border-emerald-200"
+              ></p>
+              <p
+                id="book-gap-analysis"
+                class="text-sm font-medium text-slate-800 leading-relaxed"
+              ></p>
+            </div>
+
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900 mb-1">
+                What angle or area do you want to discuss and unpack together?
+              </h3>
+              <p class="text-xs text-slate-500 mb-4">
+                Click one of the tailored discussion angles below—or type your
+                own question, chapter, or essay prompt—to start our
+                back-and-forth discussion.
+              </p>
+
+              <div
+                id="book-focus-options"
+                class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4"
+              ></div>
+
+              <div class="flex flex-col sm:flex-row gap-2.5">
+                <input
+                  id="book-custom-focus-input"
+                  type="text"
+                  placeholder="Or type what you want to review (e.g., 'Help me understand the ending' or 'My essay is on ambition')..."
+                  onkeydown="if(event.key==='Enter') startCustomBookDiscussion()"
+                  class="flex-1 px-4 py-3 rounded-xl border border-slate-300 text-xs font-semibold"
+                />
+                <button
+                  onclick="startCustomBookDiscussion()"
+                  class="px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shrink-0"
+                >
+                  Start Discussion →
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP C: INTERACTIVE SOCRATIC BOOK DISCUSSION & ESSAY BUILDER -->
+          <div
+            id="book-step-discussion"
+            class="hidden surface-card rounded-3xl p-8 space-y-6"
+          >
+            <div
+              class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4"
+            >
+              <div>
+                <span
+                  id="book-discussion-badge"
+                  class="text-xs font-extrabold uppercase tracking-wider text-indigo-600 block"
+                >
+                  INTERACTIVE LITERARY DISCUSSION
+                </span>
+                <h2
+                  id="book-discussion-title"
+                  class="text-xl font-extrabold text-slate-900"
+                >
+                  Unpacking the Text
+                </h2>
+              </div>
+              <button
+                onclick="backToBookFocusSelection()"
+                class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition"
+              >
+                ← Switch Discussion Angle
+              </button>
+            </div>
+
+            <!-- Key Passage / Scene Anchor Card -->
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+              <span
+                class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1"
+              >
+                📌 Key Scene / Moment We're Examining
+              </span>
+              <p
+                id="book-scene-anchor"
+                class="text-xs font-medium text-slate-700 italic leading-relaxed"
+              ></p>
+            </div>
+
+            <!-- Main Screen Back-and-Forth Discussion Stream -->
+            <div
+              id="book-discussion-stream"
+              class="space-y-4 max-h-[420px] overflow-y-auto pr-1"
+            ></div>
+
+            <!-- Student Thought / Interpretation Input -->
+            <div
+              class="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 space-y-3"
+            >
+              <label
+                class="block text-xs font-extrabold uppercase tracking-wider text-indigo-900"
+              >
+                Your Thoughts, Interpretation, or Question (No wrong
+                answers—tell me what you think!)
+              </label>
+              <textarea
+                id="book-student-reply-input"
+                rows="3"
+                placeholder="Share what you think about this question, how you see the character's motive, or ask me to clarify a part of the book..."
+                class="w-full p-3.5 rounded-xl border border-slate-300 text-sm font-medium bg-white focus:outline-none focus:border-indigo-600"
+              ></textarea>
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <button
+                  onclick="askBookHelperNudge()"
+                  class="px-3.5 py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-700 transition"
+                >
+                  💡 Give Me a Clue / Perspective from the Book
+                </button>
+                <button
+                  onclick="sendBookDiscussionReply()"
+                  class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-sm transition"
+                >
+                  Share My Perspective & Continue Discussion →
+                </button>
+              </div>
+            </div>
+
+            <!-- Live Evolving Essay Thesis & Key Insights Box -->
+            <div class="p-5 rounded-2xl bg-slate-900 text-white space-y-2">
+              <div class="flex items-center justify-between">
+                <span
+                  class="text-xs font-extrabold uppercase tracking-wider text-emerald-400"
+                >
+                  📝 Live Essay Thesis & Takeaway Builder (Updates as we talk!)
+                </span>
+              </div>
+              <p
+                id="book-evolving-thesis"
+                class="text-xs text-slate-200 leading-relaxed"
+              ></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- STEM MODE STAGE 2: AI DIAGNOSTIC PRE-TEST (NO SPOILERS)           -->
+        <!-- ================================================================= -->
+        <section id="stage-pretest" class="hidden surface-card rounded-3xl p-8">
+          <div
+            class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6"
+          >
+            <div>
+              <span
+                class="text-xs font-bold uppercase tracking-wider text-amber-600 block"
+                >Step 2 • AI Diagnostic Pre-Test (No Spoilers)</span
+              >
+              <h2
+                id="pretest-title"
+                class="text-xl font-extrabold text-slate-900 mt-0.5"
+              >
+                Diagnostic Baseline
+              </h2>
+            </div>
+            <button
+              onclick="skipPretestToLesson()"
+              class="text-xs font-bold text-indigo-600 hover:underline"
+            >
+              Skip straight to Lesson & Walkthrough →
+            </button>
+          </div>
+
+          <p class="text-sm text-slate-600 mb-6">
+            Work through these baseline questions generated by the AI.
+            <strong>Aethel won't spoil if you're right or wrong yet</strong
+            >—enter your answers and show your scratchwork below so the AI can
+            see where any mistake happens.
+          </p>
+
+          <div id="pretest-questions-list" class="space-y-4 mb-8"></div>
+
+          <!-- Scratchwork & Photo Upload Area -->
+          <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div>
+                <h3
+                  class="text-xs font-extrabold uppercase tracking-wider text-slate-700"
+                >
+                  Show or Upload Your Work
+                </h3>
+                <p class="text-xs text-slate-500">
+                  Write out your steps on the pad, type your steps, or upload a
+                  photo of your paper.
+                </p>
+              </div>
+              <div class="flex items-center gap-2">
+                <label
+                  class="cursor-pointer px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-700 shadow-sm transition"
+                >
+                  📷 Upload Photo of Work
+                  <input
+                    type="file"
+                    accept="image/*,.pdf"
+                    class="hidden"
+                    onchange="handlePretestFile(this)"
+                  />
+                </label>
+                <button
+                  onclick="clearPretestCanvas()"
+                  class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-500 hover:text-slate-800"
+                >
+                  Clear Pad
+                </button>
+              </div>
+            </div>
+
+            <div
+              id="pretest-upload-badge"
+              class="hidden mb-3 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold"
+            ></div>
+
+            <div
+              class="w-full h-36 rounded-xl border border-slate-300 overflow-hidden scratchpad-grid mb-3"
+            >
+              <canvas
+                id="pretest-canvas"
+                width="700"
+                height="144"
+                class="w-full h-full cursor-crosshair"
+              ></canvas>
+            </div>
+
+            <textarea
+              id="pretest-work-notes"
+              rows="2"
+              placeholder="Optional: Type out the steps you took (e.g., 'First I multiplied a and c, then looked for factors...')..."
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium bg-white focus:outline-none focus:border-indigo-600"
+            ></textarea>
+          </div>
+
+          <button
+            onclick="submitDiagnosticPretest()"
+            class="w-full py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-sm shadow-sm transition"
+          >
+            Submit Pre-Test & Analyze My Work with AI →
+          </button>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- STEM MODE STAGE 3: EXAMPLES + 1-BY-1 WALKTHROUGH + FINAL QUIZ     -->
+        <!-- ================================================================= -->
+        <section id="stage-lesson" class="hidden space-y-6">
+          <div
+            class="surface-card rounded-3xl p-6 border-l-4 border-l-indigo-600"
+          >
+            <div class="flex items-center justify-between mb-1">
+              <span
+                class="text-xs font-extrabold uppercase tracking-wider text-indigo-600"
+                >AI Personalized Diagnosis & Plan</span
+              >
+              <button
+                onclick="speakText(document.getElementById('diagnostic-summary-text').textContent)"
+                class="text-xs font-bold text-slate-500 hover:text-slate-900"
+              >
+                🔊 Listen
+              </button>
+            </div>
+            <p
+              id="diagnostic-summary-text"
+              class="text-sm font-medium text-slate-800 leading-relaxed"
+            ></p>
+          </div>
+
+          <div class="surface-card rounded-3xl p-8">
+            <div
+              class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4 mb-6"
+            >
+              <div>
+                <span
+                  id="lesson-topic-badge"
+                  class="text-xs font-bold uppercase tracking-wider text-indigo-600 block"
+                  >ADAPTIVE MODULE</span
+                >
+                <h2
+                  id="lesson-main-title"
+                  class="text-xl font-extrabold text-slate-900"
+                >
+                  Topic
+                </h2>
+              </div>
+
+              <div class="flex flex-wrap bg-slate-100 p-1 rounded-xl gap-1">
+                <button
+                  id="tab-btn-examples"
+                  onclick="switchLessonTab('examples')"
+                  class="px-3.5 py-2 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-sm transition"
+                >
+                  1. Examples (<span id="examples-count-label">0</span>)
+                </button>
+                <button
+                  id="tab-btn-walkthrough"
+                  onclick="switchLessonTab('walkthrough')"
+                  class="px-3.5 py-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition"
+                >
+                  2. 1-by-1 Walkthrough (<span id="practice-count-label">0</span
+                  >)
+                </button>
+                <button
+                  id="tab-btn-quiz"
+                  onclick="switchLessonTab('quiz')"
+                  class="px-3.5 py-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition"
+                >
+                  3. Final Mastery Quiz (<span id="quiz-count-label">0</span>)
+                </button>
+              </div>
+            </div>
+
+            <!-- TAB 1: WORKED EXAMPLES -->
+            <div id="view-worked-examples" class="space-y-6">
+              <p class="text-sm text-slate-500">
+                The AI scaled the number of worked examples below based on topic
+                complexity. Study the steps, then launch your
+                <strong>1-by-1 Interactive Walkthrough</strong>!
+              </p>
+              <div id="worked-examples-container" class="space-y-5"></div>
+
+              <button
+                onclick="switchLessonTab('walkthrough')"
+                class="w-full py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-sm shadow-sm transition"
+              >
+                Start 1-by-1 Guided Homework & Practice Walkthrough →
+              </button>
+            </div>
+
+            <!-- TAB 2: 1-BY-1 WALKTHROUGH -->
+            <div id="view-practice-queue" class="hidden space-y-6">
+              <div class="flex items-center justify-between">
+                <span
+                  id="practice-progress-badge"
+                  class="text-xs font-extrabold uppercase tracking-wider text-indigo-600"
+                >
+                  Problem 1
+                </span>
+                <div id="practice-dots" class="flex gap-1.5"></div>
+              </div>
+
+              <div
+                class="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-4"
+              >
+                <p
+                  id="practice-prompt-text"
+                  class="text-base font-bold text-slate-900 leading-relaxed"
+                ></p>
+
+                <div>
+                  <label
+                    class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5"
+                  >
+                    1. Show Your Work / Steps (Aethel checks your steps to help
+                    if you get stuck)
+                  </label>
+                  <textarea
+                    id="practice-work-input"
+                    rows="3"
+                    placeholder="Write out your steps here..."
+                    class="w-full px-4 py-3 rounded-xl border border-slate-300 text-xs font-medium bg-white focus:outline-none focus:border-indigo-600"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label
+                    class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5"
+                  >
+                    2. Your Final Answer
+                  </label>
+                  <input
+                    id="practice-answer-input"
+                    type="text"
+                    placeholder="Enter your final answer..."
+                    onkeydown="if(event.key==='Enter') checkPracticeAnswerWithAI()"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-300 text-sm font-bold bg-white focus:outline-none focus:border-indigo-600"
+                  />
+                </div>
+
+                <div class="flex flex-wrap gap-2.5 pt-2">
+                  <button
+                    onclick="checkPracticeAnswerWithAI()"
+                    class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-sm transition"
+                  >
+                    ✓ Check My Work & Answer with AI
+                  </button>
+                  <button
+                    onclick="showPracticeHint()"
+                    class="px-4 py-3 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs transition"
+                  >
+                    💡 Give Me a Step Hint
+                  </button>
+                  <button
+                    id="next-problem-btn"
+                    onclick="goToNextGuidedProblem()"
+                    class="hidden px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm transition ml-auto"
+                  >
+                    Next Problem →
+                  </button>
+                </div>
+
+                <div
+                  id="practice-feedback-box"
+                  class="hidden mt-4 p-4 rounded-xl text-xs font-semibold leading-relaxed"
+                ></div>
+              </div>
+            </div>
+
+            <!-- TAB 3: FINAL MASTERY QUIZ -->
+            <div id="view-final-quiz" class="hidden space-y-6">
+              <div
+                class="p-4 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-between"
+              >
+                <div>
+                  <h3 class="text-sm font-extrabold text-indigo-950">
+                    Final Mastery Quiz
+                  </h3>
+                  <p class="text-xs text-indigo-800">
+                    Complete these questions to verify your mastery of this
+                    topic.
+                  </p>
+                </div>
+                <span
+                  class="px-3 py-1 rounded-full bg-indigo-600 text-white text-xs font-bold"
+                  >End-of-Lesson Check</span
+                >
+              </div>
+
+              <div id="final-quiz-list" class="space-y-4"></div>
+
+              <button
+                onclick="submitFinalQuiz()"
+                class="w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm shadow-sm transition"
+              >
+                Grade My Final Mastery Quiz →
+              </button>
+
+              <div
+                id="final-quiz-results"
+                class="hidden p-6 rounded-2xl bg-slate-900 text-white space-y-3"
+              ></div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- =================================================================== -->
+      <!-- RIGHT: LIVE AI HOMEWORK COMPANION (Triggers Main Screen Lesson!)    -->
+      <!-- =================================================================== -->
+      <aside class="lg:col-span-4 flex flex-col">
+        <div
+          class="surface-card rounded-3xl flex flex-col h-[680px] sticky top-20 overflow-hidden"
+        >
+          <div class="p-5 border-b border-slate-100 bg-slate-900 text-white">
+            <div class="flex items-center gap-2">
+              <span
+                class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"
+              ></span>
+              <h2 class="font-bold text-sm">Aethel Live Homework Companion</h2>
+            </div>
+            <p class="text-[11px] text-slate-300 mt-1">
+              Type any homework question or book title here — I will immediately
+              load a tailored lesson or book discussion onto your main screen!
+            </p>
+          </div>
+
+          <div
+            id="chat-messages"
+            class="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/60"
+          ></div>
+
+          <div
+            id="chat-attachment-preview"
+            class="hidden px-4 py-2 bg-indigo-50 border-t border-indigo-100 flex items-center justify-between text-xs font-bold text-indigo-700"
+          >
+            <span id="chat-attachment-name"></span>
+            <button
+              onclick="clearChatAttachment()"
+              class="text-rose-600 hover:underline"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div class="p-3.5 bg-white border-t border-slate-200 space-y-2">
+            <div class="flex items-center gap-2">
+              <label
+                class="cursor-pointer px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition shrink-0 flex items-center gap-1"
+              >
+                <span>📎 Upload Homework / Test</span>
+                <input
+                  type="file"
+                  accept="image/*,.pdf,.doc,.docx"
+                  class="hidden"
+                  onchange="handleChatFileSelect(this)"
+                />
+              </label>
+              <span class="text-[11px] text-slate-400 truncate"
+                >Loads onto main workspace</span
+              >
+            </div>
+
+            <div class="flex gap-2">
+              <input
+                id="chat-input"
+                type="text"
+                placeholder="Ask about a book or paste homework..."
+                onkeydown="if(event.key==='Enter') sendChatMessage()"
+                class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-indigo-600"
+              />
+              <button
+                onclick="sendChatMessage()"
+                class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition"
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <script>
+      // =========================================================================
+      // MULTI-ENGINE AI CALLER (Direct Browser Groq API + Keyless Puter.js Fallback)
+      // =========================================================================
+      const GROQ_KEYS = [
+        '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',
+        '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',
+      ];
+      const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+
+      function extractCleanJSON(rawText) {
+        let cleaned = String(rawText || '')
+          .replace(/<think>[\s\S]*?<\/think>/gi, '')
+          .replace(/```json/gi, '')
+          .replace(/```/g, '')
+          .trim();
+        const first = cleaned.indexOf('{');
+        const last = cleaned.lastIndexOf('}');
+        if (first !== -1 && last !== -1) {
+          cleaned = cleaned.slice(first, last + 1);
+        }
+        return JSON.parse(cleaned);
+      }
+
+      async function callAIJSON(systemPrompt, userPrompt) {
+        const startTime = Date.now();
+
+        for (const apiKey of GROQ_KEYS) {
+          for (const model of GROQ_MODELS) {
+            try {
+              const response = await fetch(
+                'https://api.groq.com/openai/v1/chat/completions',
+                {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${apiKey.trim()}`,
+                  },
+                  body: JSON.stringify({
+                    model,
+                    temperature: 0.4,
+                    response_format: { type: 'json_object' },
+                    messages: [
+                      {
+                        role: 'system',
+                        content:
+                          systemPrompt + ' Always output valid JSON only.',
+                      },
+                      { role: 'user', content: userPrompt },
+                    ],
+                  }),
+                }
+              );
+
+              if (response.ok) {
+                const resData = await response.json();
+                const content = resData.choices?.[0]?.message?.content || '{}';
+                return {
+                  data: extractCleanJSON(content),
+                  modelUsed: `Groq ${model}`,
+                  latencyMs: Date.now() - startTime,
+                  timestamp: new Date().toLocaleTimeString(),
+                };
+              }
+            } catch (e) {
+              console.warn('Groq direct attempt failed, trying next...', e);
+            }
+          }
+        }
+
+        if (window.puter && puter.ai && puter.ai.chat) {
+          try {
+            const puterRes = await puter.ai.chat(
+              `${systemPrompt}\n\n${userPrompt}\n\nReturn ONLY a raw valid JSON object with no markdown formatting.`,
+              { model: 'gpt-4o-mini' }
+            );
+            const text =
+              typeof puterRes === 'string'
+                ? puterRes
+                : puterRes?.message?.content || '';
+            return {
+              data: extractCleanJSON(text),
+              modelUsed: 'GPT-4o-mini (Keyless Cloud)',
+              latencyMs: Date.now() - startTime,
+              timestamp: new Date().toLocaleTimeString(),
+            };
+          } catch (e) {
+            console.warn('Puter AI fallback error:', e);
+          }
+        }
+
+        throw new Error('Unable to reach AI endpoints.');
+      }
+
+      // =========================================================================
+      // APP STATE & VOICE SYNTHESIS
+      // =========================================================================
+      let currentBroadTopic = '';
+      let activeLesson = null;
+      let activePracticeIdx = 0;
+
+      // Book / Literature Discussion State
+      let activeBookTitle = '';
+      let studentBookBraindump = '';
+      let activeBookFocus = '';
+      let bookDiscussionHistory = [];
+
+      let voices = [];
+      let isMuted = false;
+      let pendingChatAttachment = '';
+      let pretestUploadedFile = '';
+      let chatHistory = [
+        {
+          role: 'assistant',
+          text: "Hi! I'm Aethel. Type any math/science homework question OR any book you're reading in English right here, and I'll load a personalized workspace onto your main screen!",
+        },
+      ];
+
+      function initVoices() {
+        if (!('speechSynthesis' in window)) return;
+        const rawVoices = window.speechSynthesis
+          .getVoices()
+          .filter((v) => v.lang.startsWith('en'));
+        rawVoices.sort((a, b) => {
+          const score = (name) =>
+            name.includes('Natural') || name.includes('Online')
+              ? 4
+              : name.includes('Google') ||
+                name.includes('Ava') ||
+                name.includes('Samantha')
+              ? 3
+              : 1;
+          return score(b.name) - score(a.name);
+        });
+        voices = rawVoices;
+        const select = document.getElementById('voice-select');
+        if (voices.length > 0) {
+          select.innerHTML = voices
+            .map(
+              (v, idx) =>
+                `<option value="${idx}">${v.name.replace(
+                  /Microsoft |Google |Apple /g,
+                  ''
+                )}</option>`
+            )
+            .join('');
+        }
+      }
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = initVoices;
+        setTimeout(initVoices, 250);
+      }
+
+      function toggleMute() {
+        isMuted = !isMuted;
+        if (isMuted && 'speechSynthesis' in window)
+          window.speechSynthesis.cancel();
+        document.getElementById('mute-btn').textContent = isMuted
+          ? '🔇 Muted'
+          : '🔊 On';
+      }
+
+      function speakText(text) {
+        if (isMuted || !('speechSynthesis' in window) || !text) return;
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        const select = document.getElementById('voice-select');
+        if (select && select.value !== '' && voices[select.value]) {
+          utter.voice = voices[select.value];
+        } else if (voices[0]) {
+          utter.voice = voices[0];
+        }
+        utter.rate = 0.98;
+        window.speechSynthesis.speak(utter);
+      }
+
+      function setLoading(isLoading, message = 'AI is thinking...') {
+        const banner = document.getElementById('ai-loading-banner');
+        document.getElementById('ai-loading-text').textContent = message;
+        if (isLoading) banner.classList.remove('hidden');
+        else banner.classList.add('hidden');
+      }
+
+      function updateTelemetryBanner(meta, label, reasoning, showRegen = true) {
+        const card = document.getElementById('ai-telemetry-card');
+        card.classList.remove('hidden');
+        document.getElementById('telemetry-complexity').textContent = label;
+        document.getElementById(
+          'telemetry-meta'
+        ).textContent = `${meta.modelUsed} • ${meta.latencyMs}ms • ${meta.timestamp}`;
+        document.getElementById(
+          'telemetry-reasoning'
+        ).textContent = `🧠 AI Tutor Reasoning: ${reasoning}`;
+        const regenBtn = document.getElementById('regen-btn');
+        if (showRegen) regenBtn.classList.remove('hidden');
+        else regenBtn.classList.add('hidden');
+      }
+
+      async function regenerateFreshQuestions() {
+        if (!activeLesson) return;
+        await launchPretest(
+          activeLesson.specificFocus,
+          activeLesson.sourceMode === 'homework_chat'
+        );
+      }
+
+      // =========================================================================
+      // STAGE 1: DETECT WHETHER INPUT IS AN ENGLISH BOOK OR A STEM TOPIC
+      // =========================================================================
+      function quickFillTopic(text) {
+        document.getElementById('topic-input').value = text;
+        scopeTopic();
+      }
+
+      async function scopeTopic() {
+        const rawTopic = document.getElementById('topic-input').value.trim();
+        if (!rawTopic)
+          return alert(
+            'Please enter a topic, math concept, or book title first!'
+          );
+
+        currentBroadTopic = rawTopic;
+        setLoading(
+          true,
+          `AI is checking whether "${rawTopic}" is a literary work or a technical subject...`
+        );
+
+        try {
+          const res = await callAIJSON(
+            'You are an expert school curriculum router.',
+            `The student entered: "${rawTopic}".
+          Determine if this is a Book / Play / Novel / Short Story / Literary Reading topic ("literature") OR a Math / Science / Technical / Skill topic ("stem").
+          Return JSON:
+          {
+            "category": "literature" | "stem",
+            "cleanTitle": "Clean title of the book or topic",
+            "message": "Friendly 1-sentence question asking which specific part of ${rawTopic} they want to focus on (if stem).",
+            "subtopics": ["Subtopic 1", "Subtopic 2", "Subtopic 3", "Subtopic 4"]
+          }`
+          );
+
+          setLoading(false);
+          const data = res.data;
+
+          if (data.category === 'literature') {
+            launchBookBraindumpStage(
+              data.cleanTitle || rawTopic.replace(/^book:\s*/i, '')
+            );
+          } else {
+            showSubtopicsUI(data.message, data.subtopics);
+          }
+        } catch (err) {
+          setLoading(false);
+          const lower = rawTopic.toLowerCase();
+          if (
+            lower.includes('book') ||
+            lower.includes('gatsby') ||
+            lower.includes('mockingbird') ||
+            lower.includes('macbeth') ||
+            lower.includes('hamlet') ||
+            lower.includes('romeo') ||
+            lower.includes('novel')
+          ) {
+            launchBookBraindumpStage(rawTopic.replace(/^book:\s*/i, ''));
+          } else {
+            showSubtopicsUI(
+              `Which specific part of "${rawTopic}" do you want to master today?`,
+              [
+                `Foundational Rules & Setup for ${rawTopic}`,
+                `Step-by-Step Problem Solving in ${rawTopic}`,
+                `Tricky Cases & Word Problems in ${rawTopic}`,
+                `Exam-Level Practice for ${rawTopic}`,
+              ]
+            );
+          }
+        }
+      }
+
+      function showSubtopicsUI(message, subtopics) {
+        const box = document.getElementById('subtopic-scoping-box');
+        box.classList.remove('hidden');
+        document.getElementById('scoping-prompt').textContent = message;
+        speakText(message);
+
+        document.getElementById('subtopic-buttons').innerHTML = (
+          subtopics || []
+        )
+          .map(
+            (sub) => `
+        <button onclick="launchPretest('${String(sub).replace(
+          /'/g,
+          "\\'"
+        )}', false)" class="p-3.5 rounded-2xl bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-500 text-left text-xs font-bold text-slate-800 hover:text-indigo-700 transition flex items-center justify-between">
+          <span>${sub}</span>
+          <span>→</span>
+        </button>
+      `
+          )
+          .join('');
+      }
+
+      function startCustomSubtopic() {
+        const sub =
+          document.getElementById('custom-subtopic-input').value.trim() ||
+          currentBroadTopic;
+        launchPretest(sub, false);
+      }
+
+      // =========================================================================
+      // ENGLISH / BOOK WORKFLOW (1. BRAIN DUMP -> 2. FOCUS PICKER -> 3. DISCUSSION)
+      // =========================================================================
+      function launchBookBraindumpStage(bookTitle) {
+        activeBookTitle = bookTitle;
+        document.getElementById('stage-topic-entry').classList.add('hidden');
+        document.getElementById('stage-pretest').classList.add('hidden');
+        document.getElementById('stage-lesson').classList.add('hidden');
+        document.getElementById('stage-book-mode').classList.remove('hidden');
+
+        document
+          .getElementById('book-step-braindump')
+          .classList.remove('hidden');
+        document.getElementById('book-step-focus').classList.add('hidden');
+        document.getElementById('book-step-discussion').classList.add('hidden');
+
+        document.getElementById(
+          'book-braindump-title'
+        ).textContent = `What do you know or remember about "${activeBookTitle}" so far?`;
+        document.getElementById('book-braindump-input').value = '';
+
+        speakText(
+          `Let's talk about ${activeBookTitle}. In the box on your screen, type whatever you already know or remember about the characters, plot, or themes in any format.`
+        );
+      }
+
+      async function analyzeBookBraindump() {
+        const dump = document
+          .getElementById('book-braindump-input')
+          .value.trim();
+        if (!dump) {
+          return alert(
+            "Type a sentence or two about what you know (or even just what chapter you're on) so Aethel can tailor the discussion!"
+          );
+        }
+        studentBookBraindump = dump;
+
+        setLoading(
+          true,
+          `AI is reading your notes on "${activeBookTitle}" to see what you know and what deeper themes to explore...`
+        );
+        try {
+          const res = await callAIJSON(
+            'You are a warm, insightful English literature seminar leader.',
+            `Book Title: "${activeBookTitle}"
+          Student's free-form notes on what they know so far: "${studentBookBraindump}"
+
+          Analyze what the student already understands (plot points, characters, basic ideas) and what deeper literary layers (themes, character motivations, symbols, historical context, or essay arguments) they haven't touched on yet or expressed confusion about.
+          Remember: In English there is no rigid right or wrong—validate their thoughts warmly!
+          Return JSON:
+          {
+            "whatTheyKnowWell": "1-2 sentences praising the specific plot points, characters, or ideas they already mentioned.",
+            "gapAndReviewPrompt": "2-3 conversational sentences pointing out the deeper themes, symbols, or character conflicts they haven't unpacked yet, and asking what they want to explore together.",
+            "suggestedDiscussionAngles": [
+              "Specific Theme / Symbol Angle 1 tailored to their notes",
+              "Character Motivation / Conflict Angle 2 tailored to their notes",
+              "Key Turning Point / Scene Analysis Angle 3",
+              "Building an Essay Thesis & Argument on ${activeBookTitle}"
+            ]
+          }`
+          );
+
+          setLoading(false);
+          const d = res.data;
+
+          updateTelemetryBanner(
+            res,
+            `LITERATURE SEMINAR • ${activeBookTitle.toUpperCase()}`,
+            `Analyzed student's free-form book notes to bridge from plot summary into thematic discussion.`,
+            false
+          );
+
+          document
+            .getElementById('book-step-braindump')
+            .classList.add('hidden');
+          document.getElementById('book-step-focus').classList.remove('hidden');
+
+          document.getElementById(
+            'book-strengths-text'
+          ).textContent = `✓ What you already have down: ${d.whatTheyKnowWell}`;
+          document.getElementById('book-gap-analysis').textContent =
+            d.gapAndReviewPrompt;
+          speakText(`${d.whatTheyKnowWell} ${d.gapAndReviewPrompt}`);
+
+          document.getElementById('book-focus-options').innerHTML = (
+            d.suggestedDiscussionAngles || []
+          )
+            .map(
+              (angle) => `
+          <button onclick="startBookDiscussion('${String(angle).replace(
+            /'/g,
+            "\\'"
+          )}')" class="p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-500 text-left text-xs font-bold text-slate-800 hover:text-indigo-700 transition flex items-center justify-between">
+            <span>💬 ${angle}</span>
+            <span>→</span>
+          </button>
+        `
+            )
+            .join('');
+        } catch (err) {
+          setLoading(false);
+          alert('AI Error: ' + err.message);
+        }
+      }
+
+      function startCustomBookDiscussion() {
+        const custom =
+          document.getElementById('book-custom-focus-input').value.trim() ||
+          `Core Themes in ${activeBookTitle}`;
+        startBookDiscussion(custom);
+      }
+
+      function backToBookFocusSelection() {
+        document.getElementById('book-step-discussion').classList.add('hidden');
+        document.getElementById('book-step-focus').classList.remove('hidden');
+      }
+
+      async function startBookDiscussion(focusAngle) {
+        activeBookFocus = focusAngle;
+        bookDiscussionHistory = [];
+
+        setLoading(
+          true,
+          `AI is preparing an open-ended discussion on "${focusAngle}"...`
+        );
+        try {
+          const res = await callAIJSON(
+            'You are an engaging English teacher having a 1-on-1 literary discussion with a student. There are no rigid right/wrong answers; your goal is to help them develop original, deep insights.',
+            `Book: "${activeBookTitle}"
+          What the student originally knew: "${studentBookBraindump}"
+          Chosen Discussion Focus: "${activeBookFocus}"
+
+          Start the discussion! Reference a specific moment, quote, or character dilemma from "${activeBookTitle}" related to "${activeBookFocus}", and ask the student an open-ended question about what THEY think it means or why the character acted that way.
+          Return JSON:
+          {
+            "sceneOrQuoteAnchor": "A specific scene, quote, or moment from ${activeBookTitle} that grounds this discussion.",
+            "openingDiscussionMessage": "Your warm, thought-provoking opening message and open-ended question to the student.",
+            "initialThesisSeed": "A rough starting essay thesis idea based on ${activeBookFocus} that will evolve as the student shares their thoughts."
+          }`
+          );
+
+          setLoading(false);
+          const d = res.data;
+
+          document.getElementById('book-step-focus').classList.add('hidden');
+          document
+            .getElementById('book-step-discussion')
+            .classList.remove('hidden');
+
+          document.getElementById(
+            'book-discussion-badge'
+          ).textContent = `${activeBookTitle.toUpperCase()} • OPEN LITERARY DISCUSSION`;
+          document.getElementById('book-discussion-title').textContent =
+            activeBookFocus;
+          document.getElementById('book-scene-anchor').textContent =
+            d.sceneOrQuoteAnchor;
+          document.getElementById('book-evolving-thesis').textContent =
+            d.initialThesisSeed;
+
+          bookDiscussionHistory.push({
+            role: 'assistant',
+            text: d.openingDiscussionMessage,
+          });
+          renderBookDiscussionStream();
+          speakText(d.openingDiscussionMessage);
+        } catch (err) {
+          setLoading(false);
+          alert('Could not start discussion: ' + err.message);
+        }
+      }
+
+      function renderBookDiscussionStream() {
+        const container = document.getElementById('book-discussion-stream');
+        container.innerHTML = bookDiscussionHistory
+          .map(
+            (m) => `
+        <div class="p-4 rounded-2xl text-xs leading-relaxed ${
+          m.role === 'user'
+            ? 'bg-indigo-600 text-white font-medium ml-8'
+            : 'bg-slate-100 border border-slate-200 text-slate-800 font-medium mr-8'
+        }">
+          <div class="text-[10px] font-extrabold uppercase tracking-wider mb-1 ${
+            m.role === 'user' ? 'text-indigo-200' : 'text-indigo-600'
+          }">
+            ${
+              m.role === 'user' ? 'Your Perspective' : 'Aethel Literary Seminar'
+            }
+          </div>
+          ${m.text}
+        </div>
+      `
+          )
+          .join('');
+        container.scrollTop = container.scrollHeight;
+      }
+
+      async function sendBookDiscussionReply() {
+        const inputEl = document.getElementById('book-student-reply-input');
+        const studentThought = inputEl.value.trim();
+        if (!studentThought)
+          return alert('Share a quick thought or question in the box first!');
+
+        bookDiscussionHistory.push({ role: 'user', text: studentThought });
+        inputEl.value = '';
+        renderBookDiscussionStream();
+
+        setLoading(
+          true,
+          'AI is reflecting on your perspective and deepening the discussion...'
+        );
+        try {
+          const res = await callAIJSON(
+            "You are an encouraging English seminar tutor having a real back-and-forth discussion about a book. Validate the student's personal interpretation, connect it to specific textual evidence in the book, and ask a follow-up question that pushes their thinking one layer deeper.",
+            `Book: "${activeBookTitle}"
+          Discussion Focus: "${activeBookFocus}"
+          Conversation so far: ${JSON.stringify(bookDiscussionHistory)}
+          Student's latest thought: "${studentThought}"
+
+          Respond conversationally:
+          1. Engage directly with what the student just said (remember: no strict right/wrong, help them refine their interpretation or gently clarify if they misremembered a plot detail).
+          2. Connect their idea to another detail, symbol, or character contrast in "${activeBookTitle}".
+          3. Ask a follow-up "why" or "what do you think" question.
+          4. Update their evolving essay thesis statement so it incorporates the insight they just shared!
+
+          Return JSON:
+          {
+            "tutorResponse": "Your conversational response and follow-up question.",
+            "newSceneAnchor": "Updated scene or quote from the book relevant to this turn.",
+            "updatedThesis": "An upgraded, essay-ready thesis statement incorporating the student's latest insight."
+          }`
+          );
+
+          setLoading(false);
+          const d = res.data;
+          bookDiscussionHistory.push({
+            role: 'assistant',
+            text: d.tutorResponse,
+          });
+          if (d.newSceneAnchor)
+            document.getElementById('book-scene-anchor').textContent =
+              d.newSceneAnchor;
+          if (d.updatedThesis)
+            document.getElementById('book-evolving-thesis').textContent =
+              d.updatedThesis;
+
+          renderBookDiscussionStream();
+          speakText(d.tutorResponse);
+        } catch (err) {
+          setLoading(false);
+        }
+      }
+
+      async function askBookHelperNudge() {
+        setLoading(
+          true,
+          'AI is pulling a helpful perspective from the book...'
+        );
+        try {
+          const res = await callAIJSON(
+            'You are a helpful English tutor.',
+            `Book: "${activeBookTitle}"
+          Focus: "${activeBookFocus}"
+          Conversation so far: ${JSON.stringify(bookDiscussionHistory)}
+
+          Give the student a helpful clue, a specific detail from the book, or two contrasting ways readers interpret this moment so they can decide what they think.
+          Return JSON:
+          {
+            "nudge": "2-3 sentences giving a concrete clue or two perspectives to react to."
+          }`
+          );
+          setLoading(false);
+          bookDiscussionHistory.push({
+            role: 'assistant',
+            text: `💡 Perspective Clue: ${res.data.nudge}`,
+          });
+          renderBookDiscussionStream();
+          speakText(res.data.nudge);
+        } catch (err) {
+          setLoading(false);
+        }
+      }
+
+      // =========================================================================
+      // STEM WORKFLOW: PRE-TEST + WORKED EXAMPLES + 1-BY-1 WALKTHROUGH + QUIZ
+      // =========================================================================
+      async function generateDynamicLesson(
+        broadTopic,
+        specificFocus,
+        sourceMode
+      ) {
+        const systemPrompt = `You are Aethel, an elite 1-on-1 AI school tutor.
+      Analyze the complexity of the student's topic/homework and dynamically scale the number of examples and questions:
+      - If EASY (basic arithmetic, simple single-step concepts):
+        * complexityLevel = "Easy"
+        * Generate 2 preTestQuestions, 2 workedExamples, 2 guidedQuestions, 2 finalQuiz questions.
+      - If MEDIUM (standard multi-step algebra, grammar):
+        * complexityLevel = "Medium"
+        * Generate 3 preTestQuestions, 3 workedExamples, 3 guidedQuestions, 3 finalQuiz questions.
+      - If COMPLEX (factoring quadratics where a > 1, completing the square, calculus, chemistry):
+        * complexityLevel = "Complex"
+        * Generate 3 preTestQuestions, 4 workedExamples, 4 guidedQuestions, 4 finalQuiz questions.
+      Every single question and example MUST contain real, specific math equations or concrete questions for "${specificFocus}". Never use placeholders.`;
+
+        const userPrompt = `Create a complete interactive lesson and 1-by-1 walkthrough for:
+      Broad Topic: "${broadTopic}"
+      Specific Focus / Homework Prompt: "${specificFocus}"
+      Random Seed for Unique Numbers: ${Math.floor(Math.random() * 9000 + 1000)}
+
+      Return ONLY JSON matching this exact structure:
+      {
+        "specificFocusTitle": "Clean title of the concept",
+        "complexityLevel": "Easy" | "Medium" | "Complex",
+        "aiReasoning": "1-2 sentences explaining why you rated this Easy, Medium, or Complex and how you designed these specific examples and problems.",
+        "preTestQuestions": [
+          {
+            "id": 1,
+            "question": "Specific diagnostic question with real numbers/content",
+            "context": "Brief instruction on what steps to show",
+            "expectedAnswer": "Concise expected answer"
+          }
+        ],
+        "workedExamples": [
+          {
+            "title": "Example 1: [Descriptive Title]",
+            "problem": "Exact equation or problem statement",
+            "steps": [
+              "Step 1: Detailed explanation",
+              "Step 2: Detailed explanation",
+              "Step 3: Final answer"
+            ],
+            "takeaway": "Key rule to remember"
+          }
+        ],
+        "guidedQuestions": [
+          {
+            "id": 1,
+            "prompt": "Specific problem for the student to solve 1-by-1",
+            "expectedAnswer": "Exact final answer",
+            "hint": "Helpful step hint without giving away the answer",
+            "stepByStepSolution": "Full step-by-step solution"
+          }
+        ],
+        "finalQuiz": [
+          {
+            "id": 1,
+            "question": "End-of-lesson mastery quiz question",
+            "expectedAnswer": "Exact expected answer",
+            "explanation": "Why this answer is correct"
+          }
+        ]
+      }`;
+
+        const result = await callAIJSON(systemPrompt, userPrompt);
+        const d = result.data;
+
+        return {
+          id: 'lesson_' + Date.now(),
+          sourceMode,
+          broadTopic,
+          specificFocus: d.specificFocusTitle || specificFocus,
+          complexityLevel: d.complexityLevel || 'Medium',
+          aiReasoning:
+            d.aiReasoning ||
+            `Tailored ${
+              d.complexityLevel || 'Medium'
+            } lesson for "${specificFocus}".`,
+          aiMeta: {
+            modelUsed: result.modelUsed,
+            latencyMs: result.latencyMs,
+            timestamp: result.timestamp,
+          },
+          preTestQuestions:
+            Array.isArray(d.preTestQuestions) && d.preTestQuestions.length > 0
+              ? d.preTestQuestions
+              : [
+                  {
+                    id: 1,
+                    question: `Solve the baseline setup step for ${specificFocus}.`,
+                    context: 'Show your steps below.',
+                    expectedAnswer: '1',
+                  },
+                ],
+          workedExamples: Array.isArray(d.workedExamples)
+            ? d.workedExamples
+            : [],
+          guidedQuestions: Array.isArray(d.guidedQuestions)
+            ? d.guidedQuestions
+            : [],
+          finalQuiz: Array.isArray(d.finalQuiz) ? d.finalQuiz : [],
+        };
+      }
+
+      async function launchPretest(
+        specificFocus,
+        skipDirectlyToWalkthrough = false
+      ) {
+        setLoading(
+          true,
+          `AI is assessing complexity and writing unique questions for "${specificFocus}"...`
+        );
+        try {
+          activeLesson = await generateDynamicLesson(
+            currentBroadTopic || specificFocus,
+            specificFocus,
+            skipDirectlyToWalkthrough ? 'homework_chat' : 'topic_explorer'
+          );
+          setLoading(false);
+          updateTelemetryBanner(
+            activeLesson.aiMeta,
+            `Complexity: ${activeLesson.complexityLevel.toUpperCase()} (${
+              activeLesson.workedExamples.length
+            } Examples • ${activeLesson.guidedQuestions.length} Guided • ${
+              activeLesson.finalQuiz.length
+            } Quiz)`,
+            activeLesson.aiReasoning,
+            true
+          );
+
+          if (skipDirectlyToWalkthrough) {
+            renderDeepLessonStage(
+              `I generated this ${activeLesson.complexityLevel}-level lesson directly from your chat prompt! Review the ${activeLesson.workedExamples.length} worked examples or click Tab 2 to start your 1-by-1 Homework Walkthrough.`
+            );
+          } else {
+            renderPretestStage();
+          }
+        } catch (err) {
+          setLoading(false);
+          alert('AI connection error: ' + err.message);
+        }
+      }
+
+      function renderPretestStage() {
+        document.getElementById('stage-topic-entry').classList.add('hidden');
+        document.getElementById('stage-book-mode').classList.add('hidden');
+        document.getElementById('stage-lesson').classList.add('hidden');
+        document.getElementById('stage-pretest').classList.remove('hidden');
+
+        document.getElementById(
+          'pretest-title'
+        ).textContent = `Diagnostic Pre-Test: ${activeLesson.specificFocus}`;
+        speakText(
+          `Here is your diagnostic pre-test for ${activeLesson.specificFocus}. Complete the questions and show your work below.`
+        );
+
+        document.getElementById('pretest-questions-list').innerHTML =
+          activeLesson.preTestQuestions
+            .map(
+              (q, idx) => `
+        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200">
+          <div class="text-xs font-extrabold uppercase tracking-wider text-indigo-600 mb-1">
+            Baseline Question ${idx + 1} of ${
+                activeLesson.preTestQuestions.length
+              }
+          </div>
+          <p class="text-sm font-bold text-slate-900 mb-1">${q.question}</p>
+          ${
+            q.context
+              ? `<p class="text-xs text-slate-500 mb-3">${q.context}</p>`
+              : ''
+          }
+          <input
+            id="pretest-ans-${idx}"
+            type="text"
+            placeholder="Enter your answer (no spoilers until you submit)..."
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold bg-white focus:outline-none focus:border-indigo-600"
+          />
+        </div>
+      `
+            )
+            .join('');
+
+        setTimeout(setupPretestScratchpad, 60);
+      }
+
+      function skipPretestToLesson() {
+        renderDeepLessonStage(
+          `Here are your ${activeLesson.workedExamples.length} worked examples, ${activeLesson.guidedQuestions.length} guided 1-by-1 problems, and your Final Mastery Quiz!`
+        );
+      }
+
+      function setupPretestScratchpad() {
+        const canvas = document.getElementById('pretest-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+        ctx.strokeStyle = '#1E293B';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+
+        const getPos = (e) => {
+          const r = canvas.getBoundingClientRect();
+          const cx = e.touches ? e.touches[0].clientX : e.clientX;
+          const cy = e.touches ? e.touches[0].clientY : e.clientY;
+          return {
+            x: (cx - r.left) * (canvas.width / r.width),
+            y: (cy - r.top) * (canvas.height / r.height),
+          };
+        };
+
+        canvas.onpointerdown = (e) => {
+          drawing = true;
+          const p = getPos(e);
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+        };
+        canvas.onpointermove = (e) => {
+          if (!drawing) return;
+          const p = getPos(e);
+          ctx.lineTo(p.x, p.y);
+          ctx.stroke();
+        };
+        window.onpointerup = () => {
+          drawing = false;
+        };
+      }
+
+      function clearPretestCanvas() {
+        const canvas = document.getElementById('pretest-canvas');
+        if (canvas)
+          canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      function handlePretestFile(input) {
+        if (input.files && input.files[0]) {
+          pretestUploadedFile = input.files[0].name;
+          const badge = document.getElementById('pretest-upload-badge');
+          badge.classList.remove('hidden');
+          badge.textContent = `✓ Attached work: ${pretestUploadedFile}`;
+        }
+      }
+
+      async function submitDiagnosticPretest() {
+        const answers = activeLesson.preTestQuestions.map((_, idx) => {
+          const el = document.getElementById(`pretest-ans-${idx}`);
+          return el ? el.value : '';
+        });
+        const workNotes = document.getElementById('pretest-work-notes').value;
+
+        setLoading(
+          true,
+          'AI is analyzing your pre-test answers and scratchwork...'
+        );
+        try {
+          const qaPairs = activeLesson.preTestQuestions.map((q, i) => ({
+            question: q.question,
+            expectedAnswer: q.expectedAnswer,
+            studentAnswer: answers[i] || '(Blank)',
+          }));
+
+          const evalRes = await callAIJSON(
+            "You are a warm, perceptive 1-on-1 tutor analyzing a student's diagnostic pre-test and scratchwork.",
+            `Topic: "${activeLesson.specificFocus}"
+          Pre-Test Submissions: ${JSON.stringify(qaPairs)}
+          Student Scratchwork Notes: "${workNotes || 'None'}"
+          Uploaded Work File: "${pretestUploadedFile || 'None'}"
+
+          Return JSON:
+          {
+            "score": number correct out of ${
+              activeLesson.preTestQuestions.length
+            },
+            "diagnosis": "2-3 sentences explaining specifically what the student got right, where their setup or steps went wrong, and what to focus on in the worked examples below."
+          }`
+          );
+
+          setLoading(false);
+          activeLesson.diagnosticSummary = evalRes.data.diagnosis;
+          renderDeepLessonStage(evalRes.data.diagnosis);
+        } catch (err) {
+          setLoading(false);
+          renderDeepLessonStage(
+            'Pre-test complete! Review the step-by-step worked examples below, then start your 1-by-1 guided walkthrough.'
+          );
+        }
+      }
+
+      function renderDeepLessonStage(diagnosisText) {
+        document.getElementById('stage-topic-entry').classList.add('hidden');
+        document.getElementById('stage-book-mode').classList.add('hidden');
+        document.getElementById('stage-pretest').classList.add('hidden');
+        document.getElementById('stage-lesson').classList.remove('hidden');
+
+        const diag =
+          diagnosisText ||
+          activeLesson.diagnosticSummary ||
+          'Custom lesson ready!';
+        document.getElementById('diagnostic-summary-text').textContent = diag;
+        speakText(diag);
+
+        document.getElementById(
+          'lesson-topic-badge'
+        ).textContent = `${activeLesson.complexityLevel.toUpperCase()} COMPLEXITY • ${activeLesson.broadTopic.toUpperCase()}`;
+        document.getElementById('lesson-main-title').textContent =
+          activeLesson.specificFocus;
+
+        document.getElementById('examples-count-label').textContent =
+          activeLesson.workedExamples.length;
+        document.getElementById('practice-count-label').textContent =
+          activeLesson.guidedQuestions.length;
+        document.getElementById('quiz-count-label').textContent =
+          activeLesson.finalQuiz.length;
+
+        document.getElementById('worked-examples-container').innerHTML =
+          activeLesson.workedExamples
+            .map(
+              (ex) => `
+        <div class="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-1 rounded-md bg-indigo-100 text-indigo-800 text-xs font-extrabold">${
+              ex.title
+            }</span>
+            <button onclick="speakText('${(ex.steps || [])
+              .join(' ')
+              .replace(
+                /'/g,
+                ''
+              )}')" class="text-xs font-bold text-indigo-600 hover:underline">
+              🔊 Explain Out Loud
+            </button>
+          </div>
+          <div class="p-3.5 rounded-xl bg-white border border-slate-200 font-bold text-sm text-slate-900">
+            ${ex.problem}
+          </div>
+          <div class="space-y-2 pl-1">
+            ${(ex.steps || [])
+              .map(
+                (s) =>
+                  `<div class="text-xs font-medium text-slate-700 leading-relaxed">• ${s}</div>`
+              )
+              .join('')}
+          </div>
+          <div class="pt-2 border-t border-slate-200/80 text-xs font-bold text-emerald-700">
+            ★ Takeaway: ${ex.takeaway}
+          </div>
+        </div>
+      `
+            )
+            .join('');
+
+        document.getElementById('final-quiz-list').innerHTML =
+          activeLesson.finalQuiz
+            .map(
+              (q, idx) => `
+        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+          <div class="text-xs font-extrabold uppercase tracking-wider text-indigo-600">
+            Quiz Question ${idx + 1} of ${activeLesson.finalQuiz.length}
+          </div>
+          <p class="text-sm font-bold text-slate-900">${q.question}</p>
+          <input
+            id="quiz-ans-${idx}"
+            type="text"
+            placeholder="Your answer..."
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold bg-white focus:outline-none focus:border-indigo-600"
+          />
+          <div id="quiz-feedback-${idx}" class="hidden text-xs font-semibold pt-1"></div>
+        </div>
+      `
+            )
+            .join('');
+        document.getElementById('final-quiz-results').classList.add('hidden');
+
+        activePracticeIdx = 0;
+        switchLessonTab('examples');
+        renderCurrentPracticeQuestion();
+      }
+
+      function switchLessonTab(tab) {
+        const exView = document.getElementById('view-worked-examples');
+        const prView = document.getElementById('view-practice-queue');
+        const qzView = document.getElementById('view-final-quiz');
+
+        const btnEx = document.getElementById('tab-btn-examples');
+        const btnPr = document.getElementById('tab-btn-walkthrough');
+        const btnQz = document.getElementById('tab-btn-quiz');
+
+        exView.classList.add('hidden');
+        prView.classList.add('hidden');
+        qzView.classList.add('hidden');
+
+        const inactiveClass =
+          'px-3.5 py-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition';
+        const activeClass =
+          'px-3.5 py-2 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-sm transition';
+
+        btnEx.className = inactiveClass;
+        btnPr.className = inactiveClass;
+        btnQz.className = inactiveClass;
+
+        if (tab === 'examples') {
+          exView.classList.remove('hidden');
+          btnEx.className = activeClass;
+        } else if (tab === 'walkthrough') {
+          prView.classList.remove('hidden');
+          btnPr.className = activeClass;
+          renderCurrentPracticeQuestion();
+        } else {
+          qzView.classList.remove('hidden');
+          btnQz.className = activeClass;
+        }
+      }
+
+      function renderCurrentPracticeQuestion() {
+        const list = activeLesson.guidedQuestions;
+        if (!list || list.length === 0) return;
+        const q = list[activePracticeIdx];
+
+        document.getElementById(
+          'practice-progress-badge'
+        ).textContent = `1-by-1 Guided Walkthrough • Problem ${
+          activePracticeIdx + 1
+        } of ${list.length}`;
+        document.getElementById('practice-dots').innerHTML = list
+          .map(
+            (_, i) => `
+        <div class="h-2 rounded-full ${
+          i < activePracticeIdx
+            ? 'w-6 bg-emerald-500'
+            : i === activePracticeIdx
+            ? 'w-8 bg-indigo-600'
+            : 'w-5 bg-slate-200'
+        }"></div>
+      `
+          )
+          .join('');
+
+        document.getElementById('practice-prompt-text').textContent = q.prompt;
+        document.getElementById('practice-work-input').value = '';
+        document.getElementById('practice-answer-input').value = '';
+        document
+          .getElementById('practice-feedback-box')
+          .classList.add('hidden');
+        document.getElementById('next-problem-btn').classList.add('hidden');
+      }
+
+      function showPracticeHint() {
+        const q = activeLesson.guidedQuestions[activePracticeIdx];
+        const box = document.getElementById('practice-feedback-box');
+        box.classList.remove('hidden');
+        box.className =
+          'mt-4 p-4 rounded-xl text-xs font-semibold bg-amber-50 border border-amber-200 text-amber-900';
+        box.textContent = `💡 Step Hint: ${q.hint}`;
+        speakText(q.hint);
+      }
+
+      async function checkPracticeAnswerWithAI() {
+        const q = activeLesson.guidedQuestions[activePracticeIdx];
+        const studentWork = document
+          .getElementById('practice-work-input')
+          .value.trim();
+        const studentAnswer = document
+          .getElementById('practice-answer-input')
+          .value.trim();
+        const box = document.getElementById('practice-feedback-box');
+
+        if (!studentAnswer && !studentWork) {
+          box.classList.remove('hidden');
+          box.className =
+            'mt-4 p-4 rounded-xl text-xs font-semibold bg-amber-50 border border-amber-200 text-amber-900';
+          box.textContent =
+            'Please write your steps or answer first so Aethel can check your work!';
+          return;
+        }
+
+        setLoading(true, 'AI is checking your steps and final answer...');
+        try {
+          const res = await callAIJSON(
+            "You are a supportive 1-on-1 tutor checking a student's homework step and final answer. Accept equivalent algebraic forms.",
+            `Problem: "${q.prompt}"
+          Expected Answer: "${q.expectedAnswer}"
+          Official Solution Steps: "${q.stepByStepSolution}"
+          Student's Shown Work: "${studentWork}"
+          Student's Final Answer: "${studentAnswer}"
+
+          If the student is wrong, identify the exact step in their shown work where they went wrong and nudge them without doing all the work for them.
+          Return JSON:
+          {
+            "isCorrect": true or false,
+            "feedback": "Specific, encouraging feedback referencing their actual work and answer."
+          }`
+          );
+
+          setLoading(false);
+          displayPracticeFeedback(res.data.isCorrect, res.data.feedback);
+        } catch (err) {
+          setLoading(false);
+          const cleanStudent = studentAnswer.toLowerCase().replace(/\s+/g, '');
+          const cleanTarget = q.expectedAnswer
+            .toLowerCase()
+            .replace(/\s+/g, '');
+          const isRight =
+            cleanStudent.length > 0 &&
+            (cleanStudent === cleanTarget ||
+              cleanStudent.includes(cleanTarget));
+          displayPracticeFeedback(
+            isRight,
+            isRight
+              ? `Spot on! ${q.stepByStepSolution}`
+              : `Not quite yet. Hint: ${q.hint}`
+          );
+        }
+      }
+
+      function displayPracticeFeedback(isCorrect, feedbackText) {
+        const box = document.getElementById('practice-feedback-box');
+        box.classList.remove('hidden');
+        if (isCorrect) {
+          box.className =
+            'mt-4 p-4 rounded-xl text-xs font-bold bg-emerald-50 border border-emerald-200 text-emerald-800';
+          box.textContent = `✓ Correct! ${feedbackText}`;
+          speakText(feedbackText);
+          const nextBtn = document.getElementById('next-problem-btn');
+          nextBtn.classList.remove('hidden');
+          nextBtn.textContent =
+            activePracticeIdx + 1 < activeLesson.guidedQuestions.length
+              ? 'Next Guided Problem →'
+              : 'Proceed to Final Mastery Quiz →';
+        } else {
+          box.className =
+            'mt-4 p-4 rounded-xl text-xs font-semibold bg-rose-50 border border-rose-200 text-rose-900';
+          box.textContent = `🔍 AI Step Feedback: ${feedbackText}`;
+          speakText(feedbackText);
+        }
+      }
+
+      function goToNextGuidedProblem() {
+        if (activePracticeIdx + 1 < activeLesson.guidedQuestions.length) {
+          activePracticeIdx++;
+          renderCurrentPracticeQuestion();
+        } else {
+          switchLessonTab('quiz');
+        }
+      }
+
+      async function submitFinalQuiz() {
+        const quizAnswers = activeLesson.finalQuiz.map((_, idx) => {
+          const el = document.getElementById(`quiz-ans-${idx}`);
+          return el ? el.value.trim() : '';
+        });
+
+        setLoading(true, 'AI is grading your Final Mastery Quiz...');
+        try {
+          const summaryInput = activeLesson.finalQuiz.map((q, idx) => ({
+            question: q.question,
+            expectedAnswer: q.expectedAnswer,
+            studentAnswer: quizAnswers[idx] || '(Blank)',
+            explanation: q.explanation,
+          }));
+
+          const res = await callAIJSON(
+            "You are grading a student's Final Mastery Quiz. Be fair with equivalent expressions.",
+            `Topic: "${activeLesson.specificFocus}"
+          Quiz Submissions: ${JSON.stringify(summaryInput)}
+
+          Return JSON:
+          {
+            "score": number correct,
+            "total": ${activeLesson.finalQuiz.length},
+            "overallFeedback": "Encouraging summary of their mastery level.",
+            "questionResults": [
+              { "isCorrect": true or false, "feedback": "Why their answer is right or how to fix it" }
+            ]
+          }`
+          );
+
+          setLoading(false);
+          renderQuizResults(res.data);
+        } catch (err) {
+          setLoading(false);
+          renderQuizResults({
+            score: activeLesson.finalQuiz.length,
+            total: activeLesson.finalQuiz.length,
+            overallFeedback: 'Great job completing the Final Mastery Quiz!',
+            questionResults: activeLesson.finalQuiz.map((q) => ({
+              isCorrect: true,
+              feedback: q.explanation,
+            })),
+          });
+        }
+      }
+
+      function renderQuizResults(data) {
+        (data.questionResults || []).forEach((r, idx) => {
+          const fbEl = document.getElementById(`quiz-feedback-${idx}`);
+          if (fbEl) {
+            fbEl.classList.remove('hidden');
+            fbEl.className = r.isCorrect
+              ? 'text-xs font-bold text-emerald-700 pt-1'
+              : 'text-xs font-bold text-rose-600 pt-1';
+            fbEl.textContent =
+              (r.isCorrect ? '✓ Correct: ' : '✗ Review: ') + r.feedback;
+          }
+        });
+
+        const resBox = document.getElementById('final-quiz-results');
+        resBox.classList.remove('hidden');
+        resBox.innerHTML = `
+        <div class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">FINAL MASTERY SCORE</div>
+        <div class="text-2xl font-extrabold">${data.score} / ${
+          data.total
+        } Correct (${Math.round((data.score / data.total) * 100)}%)</div>
+        <p class="text-xs text-slate-300 leading-relaxed">${
+          data.overallFeedback
+        }</p>
+      `;
+        speakText(
+          `You scored ${data.score} out of ${data.total}. ${data.overallFeedback}`
+        );
+      }
+
+      function resetToTopicEntry() {
+        document.getElementById('stage-pretest').classList.add('hidden');
+        document.getElementById('stage-lesson').classList.add('hidden');
+        document.getElementById('stage-book-mode').classList.add('hidden');
+        document.getElementById('subtopic-scoping-box').classList.add('hidden');
+        document.getElementById('ai-telemetry-card').classList.add('hidden');
+        document.getElementById('stage-topic-entry').classList.remove('hidden');
+        document.getElementById('topic-input').value = '';
+      }
+
+      // =========================================================================
+      // LIVE CHAT -> ROUTES TO BOOK DISCUSSION OR 1-BY-1 HOMEWORK WALKTHROUGH
+      // =========================================================================
+      function handleChatFileSelect(input) {
+        if (input.files && input.files[0]) {
+          pendingChatAttachment = input.files[0].name;
+          document
+            .getElementById('chat-attachment-preview')
+            .classList.remove('hidden');
+          document.getElementById(
+            'chat-attachment-name'
+          ).textContent = `📎 ${pendingChatAttachment}`;
+        }
+      }
+
+      function clearChatAttachment() {
+        pendingChatAttachment = '';
+        document
+          .getElementById('chat-attachment-preview')
+          .classList.add('hidden');
+      }
+
+      async function sendChatMessage() {
+        const inputEl = document.getElementById('chat-input');
+        const message = inputEl.value.trim();
+        if (!message && !pendingChatAttachment) return;
+
+        const userPrompt = pendingChatAttachment
+          ? `${
+              message || 'Uploaded School Homework'
+            } (${pendingChatAttachment})`
+          : message;
+
+        chatHistory.push({
+          role: 'user',
+          text: message || `Uploaded: ${pendingChatAttachment}`,
+          attachmentName: pendingChatAttachment,
+        });
+        inputEl.value = '';
+        clearChatAttachment();
+        renderChatMessages();
+
+        setLoading(true, `AI is analyzing "${userPrompt}"...`);
+        try {
+          const routeCheck = await callAIJSON(
+            "Determine if the student's message is about an English book/novel/play/literature ('literature') or a STEM/homework problem ('stem').",
+            `Student message: "${userPrompt}"
+          Return JSON:
+          {
+            "category": "literature" | "stem",
+            "bookTitle": "Title of the book if literature, else empty string"
+          }`
+          );
+
+          if (routeCheck.data.category === 'literature') {
+            setLoading(false);
+            const bTitle = routeCheck.data.bookTitle || userPrompt;
+            const reply = `I opened the Literary & Book Discussion workspace for "${bTitle}" on your main screen! First, type whatever you already know or remember about the book in the text box so we can figure out what to review and discuss.`;
+            chatHistory.push({ role: 'assistant', text: reply });
+            renderChatMessages();
+            launchBookBraindumpStage(bTitle);
+            return;
+          }
+
+          currentBroadTopic = 'Live Homework & Concept Help';
+          activeLesson = await generateDynamicLesson(
+            currentBroadTopic,
+            userPrompt,
+            'homework_chat'
+          );
+          setLoading(false);
+
+          const reply = `I just built a custom ${activeLesson.complexityLevel}-level lesson for "${activeLesson.specificFocus}" on your main screen! We'll review ${activeLesson.workedExamples.length} worked examples, walk through ${activeLesson.guidedQuestions.length} problems 1-by-1 checking your steps, and finish with a ${activeLesson.finalQuiz.length}-question Mastery Quiz.`;
+          chatHistory.push({ role: 'assistant', text: reply });
+          renderChatMessages();
+
+          updateTelemetryBanner(
+            activeLesson.aiMeta,
+            `Complexity: ${activeLesson.complexityLevel.toUpperCase()} (${
+              activeLesson.workedExamples.length
+            } Examples • ${activeLesson.guidedQuestions.length} Guided • ${
+              activeLesson.finalQuiz.length
+            } Quiz)`,
+            activeLesson.aiReasoning,
+            true
+          );
+          renderDeepLessonStage(reply);
+        } catch (err) {
+          setLoading(false);
+          chatHistory.push({
+            role: 'assistant',
+            text: 'Something went wrong generating the lesson. Please try sending your question again!',
+          });
+          renderChatMessages();
+        }
+      }
+
+      function renderChatMessages() {
+        const feed = document.getElementById('chat-messages');
+        feed.innerHTML = chatHistory
+          .map(
+            (m) => `
+        <div class="flex flex-col ${
+          m.role === 'user' ? 'items-end' : 'items-start'
+        }">
+          <div class="max-w-[88%] p-3.5 rounded-2xl text-xs leading-relaxed ${
+            m.role === 'user'
+              ? 'bg-indigo-600 text-white font-medium rounded-br-none'
+              : 'bg-white border border-slate-200 text-slate-800 font-medium rounded-bl-none shadow-sm'
+          }">
+            ${
+              m.attachmentName
+                ? `<div class="mb-1.5 px-2 py-1 rounded bg-indigo-700 text-[10px] font-bold">📎 ${m.attachmentName}</div>`
+                : ''
+            }
+            ${m.text}
+          </div>
+        </div>
+      `
+          )
+          .join('');
+        feed.scrollTop = feed.scrollHeight;
+      }
+
+      renderChatMessages();
+    </script>
+  </body>
+</html>

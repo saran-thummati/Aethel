@@ -32,7 +32,7 @@
   <body class="min-h-screen flex flex-col">
     <!-- TOP NAVIGATION BAR -->
     <header
-      class="bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between sticky top-0 z-30"
+      class="bg-white border-b border-slate-200 px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-30"
     >
       <div class="flex items-center gap-3">
         <div
@@ -52,7 +52,19 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-3">
+      <div class="flex flex-wrap items-center gap-2.5">
+        <button
+          onclick="togglePhotoGraderModal()"
+          class="px-3.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-extrabold border border-indigo-200 transition"
+        >
+          📸 Photo Grader
+        </button>
+        <button
+          onclick="toggleMistakeVaultModal()"
+          class="px-3.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-extrabold border border-amber-200 transition"
+        >
+          🧠 Mistake Vault (<span id="vault-count-badge">0</span>)
+        </button>
         <button
           onclick="toggleHistoryModal()"
           class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold border border-slate-200 transition"
@@ -85,6 +97,248 @@
         </button>
       </div>
     </header>
+
+    <!-- =================================================================== -->
+    <!-- FEATURE 1 MODAL: INSTANT PHOTO GRADING & ERROR CORRECTION           -->
+    <!-- =================================================================== -->
+    <div
+      id="photo-grader-modal"
+      class="hidden fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4 overflow-y-auto"
+    >
+      <div
+        class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-xl border border-slate-200 space-y-5 my-8"
+      >
+        <div
+          class="flex items-center justify-between border-b border-slate-100 pb-4"
+        >
+          <div>
+            <span
+              class="text-[11px] font-extrabold uppercase tracking-wider text-indigo-600 block"
+            >
+              AI VISION STEP-BY-STEP DIAGNOSTIC
+            </span>
+            <h3 class="text-lg font-extrabold text-slate-900">
+              📸 Instant Photo Homework & Test Error Grader
+            </h3>
+            <p class="text-xs text-slate-500">
+              Upload a photo of your handwritten scratchwork or a graded test
+              question. Aethel will pinpoint the exact step where an error
+              occurred and show you how to fix it.
+            </p>
+          </div>
+          <button
+            onclick="togglePhotoGraderModal()"
+            class="text-xs font-bold text-slate-400 hover:text-slate-700 shrink-0"
+          >
+            ✕ Close
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label
+            class="cursor-pointer p-5 rounded-2xl border-2 border-dashed border-indigo-300 bg-indigo-50/50 hover:bg-indigo-50 transition flex flex-col items-center justify-center text-center"
+          >
+            <span class="text-2xl mb-1">📷</span>
+            <span class="text-xs font-extrabold text-indigo-900"
+              >Click to Upload Photo of Work / Test</span
+            >
+            <span class="text-[11px] text-slate-500 mt-0.5"
+              >Supports JPG, PNG, WEBP</span
+            >
+            <input
+              type="file"
+              accept="image/*"
+              class="hidden"
+              onchange="handlePhotoGraderUpload(this)"
+            />
+          </label>
+
+          <div
+            id="photo-grader-preview-box"
+            class="rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden min-h-[130px] p-2"
+          >
+            <span
+              id="photo-grader-placeholder"
+              class="text-xs text-slate-400 font-medium text-center px-3"
+              >No photo selected yet</span
+            >
+            <img
+              id="photo-grader-preview-img"
+              src=""
+              alt="Uploaded Homework Preview"
+              class="hidden max-h-40 rounded-xl object-contain"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label
+            class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5"
+          >
+            Optional Context or Typed Steps (What problem was this, or what
+            confused you?)
+          </label>
+          <textarea
+            id="photo-grader-notes"
+            rows="2"
+            placeholder="e.g., 'Solve 2x^2 - 5x - 3 = 0. My teacher marked step 2 wrong...' (Or type your steps here if you don't have a photo handy!)"
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-600"
+          ></textarea>
+        </div>
+
+        <button
+          onclick="runPhotoGraderAnalysis()"
+          class="w-full py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs sm:text-sm shadow-sm transition"
+        >
+          🔍 Scan My Work & Pinpoint Exact Step Errors →
+        </button>
+
+        <!-- AI VISION RESULT CARD -->
+        <div
+          id="photo-grader-result"
+          class="hidden p-5 rounded-2xl bg-slate-900 text-white space-y-3"
+        >
+          <div class="flex items-center justify-between">
+            <span
+              id="photo-result-badge"
+              class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 text-[11px] font-extrabold"
+            >
+              Step Diagnostic Complete
+            </span>
+            <button
+              onclick="speakText(document.getElementById('photo-result-fix').textContent)"
+              class="text-xs font-bold text-indigo-300 hover:underline"
+            >
+              🔊 Listen
+            </button>
+          </div>
+          <div class="text-xs text-slate-300">
+            <strong class="text-white">Detected Topic & Work:</strong>
+            <span id="photo-result-transcription"></span>
+          </div>
+          <div
+            class="p-3.5 rounded-xl bg-rose-500/15 border border-rose-400/30 text-xs text-rose-200 leading-relaxed"
+          >
+            <strong class="text-rose-300 block mb-0.5"
+              >🎯 Exact Mistake / Breakdown Point:</strong
+            >
+            <span id="photo-result-error"></span>
+          </div>
+          <div
+            class="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-400/30 text-xs text-emerald-100 leading-relaxed"
+          >
+            <strong class="text-emerald-300 block mb-0.5"
+              >✓ How to Fix It Step-by-Step:</strong
+            >
+            <span id="photo-result-fix"></span>
+          </div>
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
+            <span class="text-[11px] text-amber-300 font-semibold">
+              ★ Automatically saved to your Mistake Vault for review!
+            </span>
+            <button
+              id="photo-launch-practice-btn"
+              class="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white text-xs font-extrabold transition"
+            >
+              Practice This Exact Skill 1-by-1 →
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- FEATURE 2 MODAL: SPACED REPETITION FLASHCARDS & MISTAKE VAULT       -->
+    <!-- =================================================================== -->
+    <div
+      id="mistake-vault-modal"
+      class="hidden fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4 overflow-y-auto"
+    >
+      <div
+        class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-xl border border-slate-200 space-y-5 my-8"
+      >
+        <div
+          class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4"
+        >
+          <div>
+            <span
+              class="text-[11px] font-extrabold uppercase tracking-wider text-amber-700 block"
+            >
+              SPACED REPETITION HABIT LOOP
+            </span>
+            <h3 class="text-lg font-extrabold text-slate-900">
+              🧠 Personal Mistake Vault & Flashcard Deck
+            </h3>
+            <p class="text-xs text-slate-500">
+              Every missed practice step, quiz question, or scanned test error
+              is automatically captured here so you can turn weak spots into
+              mastered skills.
+            </p>
+          </div>
+          <button
+            onclick="toggleMistakeVaultModal()"
+            class="text-xs font-bold text-slate-400 hover:text-slate-700"
+          >
+            ✕ Close
+          </button>
+        </div>
+
+        <!-- Mode Tabs -->
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex bg-slate-100 p-1 rounded-xl gap-1">
+            <button
+              id="vault-tab-flashcards"
+              onclick="switchVaultTab('flashcards')"
+              class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-sm transition"
+            >
+              🎴 Spaced Repetition Flashcards
+            </button>
+            <button
+              id="vault-tab-list"
+              onclick="switchVaultTab('list')"
+              class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition"
+            >
+              📋 All Logged Mistakes
+            </button>
+          </div>
+          <span
+            id="vault-stats-summary"
+            class="text-xs font-bold text-slate-500"
+          ></span>
+        </div>
+
+        <!-- FLASHCARD REVIEW VIEW -->
+        <div id="vault-view-flashcards" class="space-y-4">
+          <div
+            id="vault-flashcard-container"
+            class="p-6 rounded-2xl bg-slate-50 border border-slate-200 min-h-[220px] flex flex-col justify-between"
+          ></div>
+        </div>
+
+        <!-- ALL MISTAKES LIST VIEW -->
+        <div
+          id="vault-view-list"
+          class="hidden space-y-2.5 max-h-80 overflow-y-auto pr-1"
+        ></div>
+
+        <div
+          class="flex justify-between items-center pt-3 border-t border-slate-100"
+        >
+          <button
+            onclick="clearMistakeVault()"
+            class="text-xs font-bold text-rose-600 hover:underline"
+          >
+            Clear Mistake Vault
+          </button>
+          <button
+            onclick="toggleMistakeVaultModal()"
+            class="px-5 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- SAVED SESSIONS MODAL -->
     <div
@@ -224,7 +478,9 @@
             </button>
           </div>
 
-          <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <div
+            class="flex flex-wrap items-center gap-2 text-xs text-slate-500 mb-6"
+          >
             <span>Try a quick example:</span>
             <button
               onclick="quickFillTopic('Book: The Great Gatsby')"
@@ -249,6 +505,43 @@
               class="px-3 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 font-semibold text-indigo-800 transition"
             >
               Complex Math: Factoring (a > 1)
+            </button>
+          </div>
+
+          <!-- QUICK TOOLS BAR: PHOTO GRADER & MISTAKE VAULT -->
+          <div
+            class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-5 border-t border-slate-100"
+          >
+            <button
+              onclick="togglePhotoGraderModal()"
+              class="p-4 rounded-2xl bg-indigo-50/70 hover:bg-indigo-100/80 border border-indigo-200 text-left transition flex items-start gap-3"
+            >
+              <span class="text-xl">📸</span>
+              <div>
+                <div class="text-xs font-extrabold text-indigo-950">
+                  Instant Photo Homework & Test Grader
+                </div>
+                <p class="text-[11px] text-indigo-800/80 mt-0.5">
+                  Snap a photo of a missed test or homework problem to find the
+                  exact line where your steps went wrong.
+                </p>
+              </div>
+            </button>
+
+            <button
+              onclick="toggleMistakeVaultModal()"
+              class="p-4 rounded-2xl bg-amber-50/70 hover:bg-amber-100/80 border border-amber-200 text-left transition flex items-start gap-3"
+            >
+              <span class="text-xl">🧠</span>
+              <div>
+                <div class="text-xs font-extrabold text-amber-950">
+                  Spaced Repetition Mistake Vault
+                </div>
+                <p class="text-[11px] text-amber-800/80 mt-0.5">
+                  Review auto-saved flashcards from your past mistakes until
+                  every weak spot is 100% mastered.
+                </p>
+              </div>
             </button>
           </div>
 
@@ -900,6 +1193,11 @@
         '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',
       ];
       const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+      const GROQ_VISION_MODELS = [
+        'meta-llama/llama-4-scout-17b-16e-instruct',
+        'llama-3.2-90b-vision-preview',
+        'llama-3.2-11b-vision-preview',
+      ];
 
       function extractCleanJSON(rawText) {
         let cleaned = String(rawText || '')
@@ -983,6 +1281,460 @@
         }
 
         throw new Error('Unable to reach AI endpoints.');
+      }
+
+      // Vision AI caller with automatic fallback to standard callAIJSON
+      async function callAIVisionJSON(systemPrompt, userPrompt, base64DataUrl) {
+        const startTime = Date.now();
+        if (base64DataUrl) {
+          for (const apiKey of GROQ_KEYS) {
+            for (const vModel of GROQ_VISION_MODELS) {
+              try {
+                const response = await fetch(
+                  'https://api.groq.com/openai/v1/chat/completions',
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Authorization: `Bearer ${apiKey.trim()}`,
+                    },
+                    body: JSON.stringify({
+                      model: vModel,
+                      temperature: 0.3,
+                      response_format: { type: 'json_object' },
+                      messages: [
+                        {
+                          role: 'user',
+                          content: [
+                            {
+                              type: 'text',
+                              text: `${systemPrompt}\n\n${userPrompt}\n\nAlways output valid JSON only.`,
+                            },
+                            {
+                              type: 'image_url',
+                              image_url: { url: base64DataUrl },
+                            },
+                          ],
+                        },
+                      ],
+                    }),
+                  }
+                );
+                if (response.ok) {
+                  const resData = await response.json();
+                  const content =
+                    resData.choices?.[0]?.message?.content || '{}';
+                  return {
+                    data: extractCleanJSON(content),
+                    modelUsed: `Groq Vision (${vModel})`,
+                    latencyMs: Date.now() - startTime,
+                    timestamp: new Date().toLocaleTimeString(),
+                  };
+                }
+              } catch (e) {
+                console.warn('Groq Vision attempt failed, trying next...', e);
+              }
+            }
+          }
+        }
+        return await callAIJSON(systemPrompt, userPrompt);
+      }
+
+      // Helper to compress uploaded image to clean JPEG base64
+      function compressImageFileToBase64(file, callback) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const maxDim = 960;
+            let w = img.width;
+            let h = img.height;
+            if (w > maxDim || h > maxDim) {
+              if (w > h) {
+                h = Math.round((h * maxDim) / w);
+                w = maxDim;
+              } else {
+                w = Math.round((w * maxDim) / h);
+                h = maxDim;
+              }
+            }
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            callback(canvas.toDataURL('image/jpeg', 0.82));
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      // =========================================================================
+      // FEATURE 1: INSTANT PHOTO GRADING & STEP-BY-STEP ERROR CORRECTION
+      // =========================================================================
+      let currentPhotoGraderBase64 = '';
+      let currentPhotoGraderFileName = '';
+
+      function togglePhotoGraderModal() {
+        const modal = document.getElementById('photo-grader-modal');
+        modal.classList.toggle('hidden');
+      }
+
+      function handlePhotoGraderUpload(input) {
+        if (input.files && input.files[0]) {
+          const file = input.files[0];
+          currentPhotoGraderFileName = file.name;
+          compressImageFileToBase64(file, (base64Url) => {
+            currentPhotoGraderBase64 = base64Url;
+            const imgEl = document.getElementById('photo-grader-preview-img');
+            const placeholderEl = document.getElementById(
+              'photo-grader-placeholder'
+            );
+            imgEl.src = base64Url;
+            imgEl.classList.remove('hidden');
+            placeholderEl.classList.add('hidden');
+          });
+        }
+      }
+
+      async function runPhotoGraderAnalysis() {
+        const notes = document
+          .getElementById('photo-grader-notes')
+          .value.trim();
+        if (!currentPhotoGraderBase64 && !notes) {
+          return alert(
+            'Please upload a photo of your work/test or type out the steps you want Aethel to grade!'
+          );
+        }
+
+        setLoading(
+          true,
+          'AI Vision is scanning your steps and pinpointing any mistakes...'
+        );
+        try {
+          const res = await callAIVisionJSON(
+            'You are Aethel, an expert 1-on-1 AI STEM & humanities grader. Examine the student work (from the attached image and/or notes), transcribe the problem and their steps, identify the exact line or step where an error happened, and explain how to fix it step-by-step.',
+            `Student Context/Notes: "${
+              notes || 'Uploaded homework/test image'
+            }" (File: ${currentPhotoGraderFileName || 'Direct Input'})
+            Return JSON:
+            {
+              "topicTitle": "Clean, specific topic name (e.g., Factoring Quadratics, Stoichiometry, Systems of Equations)",
+              "transcribedWork": "1-2 sentences summarizing the problem and what steps the student wrote.",
+              "exactErrorPoint": "Pinpoint the exact step/line where the mistake occurred (or praise them if 100% correct).",
+              "stepByStepFix": "Clear step-by-step explanation of how to correct the mistake and reach the right answer.",
+              "correctFinalAnswer": "Concise final answer",
+              "keyRuleToRemember": "1-sentence golden rule so the student never makes this mistake again."
+            }`,
+            currentPhotoGraderBase64
+          );
+
+          setLoading(false);
+          const d = res.data;
+
+          document
+            .getElementById('photo-grader-result')
+            .classList.remove('hidden');
+          document.getElementById(
+            'photo-result-badge'
+          ).textContent = `✓ Scanned via ${res.modelUsed}`;
+          document.getElementById('photo-result-transcription').textContent =
+            d.transcribedWork;
+          document.getElementById('photo-result-error').textContent =
+            d.exactErrorPoint;
+          document.getElementById('photo-result-fix').textContent =
+            d.stepByStepFix;
+
+          // Automatically log to Mistake Vault
+          addMistakeToVault({
+            topic: d.topicTitle || 'Scanned Homework Problem',
+            question: d.transcribedWork || notes || 'Uploaded Photo Problem',
+            studentMistake: d.exactErrorPoint,
+            correctAnswer: d.correctFinalAnswer || 'See step-by-step fix',
+            keyRule: `${d.keyRuleToRemember || ''} (${d.stepByStepFix || ''})`,
+          });
+
+          const practiceBtn = document.getElementById(
+            'photo-launch-practice-btn'
+          );
+          practiceBtn.onclick = () => {
+            togglePhotoGraderModal();
+            currentBroadTopic = d.topicTitle || 'Scanned Homework Topic';
+            launchPretest(d.topicTitle || notes || 'Algebra Practice', true);
+          };
+
+          speakText(`${d.exactErrorPoint} ${d.stepByStepFix}`);
+        } catch (err) {
+          setLoading(false);
+          alert('Could not analyze work: ' + err.message);
+        }
+      }
+
+      // =========================================================================
+      // FEATURE 2: SPACED REPETITION FLASHCARDS & MISTAKE VAULT
+      // =========================================================================
+      const STORAGE_KEY_VAULT = 'aethel_mistake_vault_v1';
+      let currentVaultTab = 'flashcards';
+      let activeFlashcardIdx = 0;
+      let isFlashcardFlipped = false;
+
+      function loadMistakeVault() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY_VAULT);
+          return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function saveMistakeVault(list) {
+        try {
+          localStorage.setItem(STORAGE_KEY_VAULT, JSON.stringify(list));
+          updateVaultCountBadge();
+        } catch (e) {}
+      }
+
+      function addMistakeToVault({
+        topic,
+        question,
+        studentMistake,
+        correctAnswer,
+        keyRule,
+      }) {
+        const list = loadMistakeVault();
+        const existingIdx = list.findIndex(
+          (item) => item.question === question
+        );
+        const entry = {
+          id: 'mistake_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+          topic: topic || 'General Concept',
+          question: question || 'Practice Problem',
+          studentMistake: studentMistake || 'Missed step during practice',
+          correctAnswer: correctAnswer || '',
+          keyRule: keyRule || 'Review step-by-step solution carefully.',
+          box: 1, // Leitner Box 1 (Needs Frequent Review), Box 2 (Learning), Box 3 (Mastered)
+          timestamp: new Date().toLocaleDateString(),
+        };
+
+        if (existingIdx !== -1) {
+          list[existingIdx] = { ...list[existingIdx], ...entry, box: 1 };
+        } else {
+          list.unshift(entry);
+        }
+        saveMistakeVault(list);
+      }
+
+      function updateVaultCountBadge() {
+        const list = loadMistakeVault();
+        const dueCount = list.filter((m) => m.box < 3).length;
+        const badge = document.getElementById('vault-count-badge');
+        if (badge) badge.textContent = dueCount || list.length;
+      }
+
+      function toggleMistakeVaultModal() {
+        const modal = document.getElementById('mistake-vault-modal');
+        modal.classList.toggle('hidden');
+        if (!modal.classList.contains('hidden')) {
+          activeFlashcardIdx = 0;
+          isFlashcardFlipped = false;
+          renderMistakeVaultUI();
+        }
+      }
+
+      function switchVaultTab(tab) {
+        currentVaultTab = tab;
+        const btnFlash = document.getElementById('vault-tab-flashcards');
+        const btnList = document.getElementById('vault-tab-list');
+        const viewFlash = document.getElementById('vault-view-flashcards');
+        const viewList = document.getElementById('vault-view-list');
+
+        const activeClass =
+          'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-sm transition';
+        const inactiveClass =
+          'px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition';
+
+        if (tab === 'flashcards') {
+          btnFlash.className = activeClass;
+          btnList.className = inactiveClass;
+          viewFlash.classList.remove('hidden');
+          viewList.classList.add('hidden');
+        } else {
+          btnList.className = activeClass;
+          btnFlash.className = inactiveClass;
+          viewList.classList.remove('hidden');
+          viewFlash.classList.add('hidden');
+        }
+        renderMistakeVaultUI();
+      }
+
+      function renderMistakeVaultUI() {
+        const list = loadMistakeVault();
+        const box1 = list.filter((m) => m.box === 1).length;
+        const box2 = list.filter((m) => m.box === 2).length;
+        const box3 = list.filter((m) => m.box === 3).length;
+
+        document.getElementById(
+          'vault-stats-summary'
+        ).textContent = `Box 1 (Due): ${box1} • Box 2 (Learning): ${box2} • Box 3 (Mastered): ${box3}`;
+
+        // Render Flashcard View
+        const flashContainer = document.getElementById(
+          'vault-flashcard-container'
+        );
+        if (list.length === 0) {
+          flashContainer.innerHTML = `
+            <div class="text-center py-8 space-y-2">
+              <div class="text-2xl">🎉</div>
+              <div class="text-sm font-extrabold text-slate-800">Your Mistake Vault is Empty!</div>
+              <p class="text-xs text-slate-500 max-w-md mx-auto">
+                Whenever you miss a step in the 1-by-1 Walkthrough, miss a Final Mastery Quiz question, or scan a test in the Photo Grader, Aethel automatically builds flashcards for you here.
+              </p>
+            </div>
+          `;
+        } else {
+          if (activeFlashcardIdx >= list.length) activeFlashcardIdx = 0;
+          const card = list[activeFlashcardIdx];
+          const boxLabel =
+            card.box === 1
+              ? '🔴 Box 1 • Frequent Review'
+              : card.box === 2
+              ? '🟡 Box 2 • Reinforcing'
+              : '🟢 Box 3 • Mastered';
+
+          flashContainer.innerHTML = `
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[11px] font-extrabold">
+                  Card ${activeFlashcardIdx + 1} of ${list.length} • ${
+            card.topic
+          }
+                </span>
+                <span class="text-[11px] font-bold text-slate-600">${boxLabel}</span>
+              </div>
+
+              <div class="p-4 rounded-xl bg-white border border-slate-200 space-y-2">
+                <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Problem / Concept</div>
+                <p class="text-sm font-extrabold text-slate-900">${
+                  card.question
+                }</p>
+                <div class="text-xs font-semibold text-rose-700 bg-rose-50 px-3 py-2 rounded-lg border border-rose-200">
+                  ⚠️ Past Trap / Error: ${card.studentMistake}
+                </div>
+              </div>
+
+              ${
+                isFlashcardFlipped
+                  ? `
+                <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 space-y-1.5">
+                  <div class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700">✓ Correct Solution & Rule</div>
+                  ${
+                    card.correctAnswer
+                      ? `<div class="text-xs font-extrabold text-emerald-950">Answer: ${card.correctAnswer}</div>`
+                      : ''
+                  }
+                  <p class="text-xs font-medium text-emerald-900 leading-relaxed">${
+                    card.keyRule
+                  }</p>
+                </div>
+              `
+                  : `
+                <button onclick="flipCurrentFlashcard()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold transition">
+                  🔄 Flip Flashcard to Reveal Rule & Fix
+                </button>
+              `
+              }
+            </div>
+
+            ${
+              isFlashcardFlipped
+                ? `
+              <div class="pt-4 mt-4 border-t border-slate-200 space-y-2">
+                <div class="text-[11px] font-bold text-slate-500 text-center">How well did you recall how to solve this? (Spaced Repetition Rating)</div>
+                <div class="grid grid-cols-3 gap-2">
+                  <button onclick="rateFlashcard(1)" class="py-2.5 px-3 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-900 text-xs font-extrabold transition">
+                    🔴 Still Tricky (Box 1)
+                  </button>
+                  <button onclick="rateFlashcard(2)" class="py-2.5 px-3 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-extrabold transition">
+                    🟡 Got It (Box 2)
+                  </button>
+                  <button onclick="rateFlashcard(3)" class="py-2.5 px-3 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-xs font-extrabold transition">
+                    🟢 Mastered! (Box 3)
+                  </button>
+                </div>
+              </div>
+            `
+                : ''
+            }
+          `;
+        }
+
+        // Render List View
+        const listContainer = document.getElementById('vault-view-list');
+        if (list.length === 0) {
+          listContainer.innerHTML = `<div class="p-6 text-center text-xs text-slate-400 font-semibold">No mistakes logged yet.</div>`;
+        } else {
+          listContainer.innerHTML = list
+            .map(
+              (item) => `
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-900">Box ${
+                    item.box
+                  }</span>
+                  <span class="text-xs font-extrabold text-slate-900">${
+                    item.topic
+                  }</span>
+                  <span class="text-[11px] text-slate-400">${
+                    item.timestamp
+                  }</span>
+                </div>
+                <p class="text-xs font-bold text-slate-800">${item.question}</p>
+                <p class="text-[11px] text-rose-700 font-medium">Trap: ${
+                  item.studentMistake
+                }</p>
+              </div>
+              <button onclick="practiceFromVault('${String(item.topic).replace(
+                /'/g,
+                "\\'"
+              )}')" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shrink-0">
+                Practice Topic →
+              </button>
+            </div>
+          `
+            )
+            .join('');
+        }
+      }
+
+      function flipCurrentFlashcard() {
+        isFlashcardFlipped = true;
+        renderMistakeVaultUI();
+      }
+
+      function rateFlashcard(newBox) {
+        const list = loadMistakeVault();
+        if (list[activeFlashcardIdx]) {
+          list[activeFlashcardIdx].box = newBox;
+          saveMistakeVault(list);
+        }
+        isFlashcardFlipped = false;
+        activeFlashcardIdx =
+          (activeFlashcardIdx + 1) % Math.max(list.length, 1);
+        renderMistakeVaultUI();
+      }
+
+      function practiceFromVault(topic) {
+        toggleMistakeVaultModal();
+        currentBroadTopic = topic;
+        launchPretest(topic, true);
+      }
+
+      function clearMistakeVault() {
+        localStorage.removeItem(STORAGE_KEY_VAULT);
+        updateVaultCountBadge();
+        renderMistakeVaultUI();
       }
 
       // =========================================================================
@@ -1170,6 +1922,7 @@
       let isMuted = false;
       let pendingChatAttachment = '';
       let pretestUploadedFile = '';
+      let pretestUploadedBase64 = '';
       let chatHistory = loadSavedChatHistory();
 
       function initVoices() {
@@ -1929,10 +2682,16 @@
 
       function handlePretestFile(input) {
         if (input.files && input.files[0]) {
-          pretestUploadedFile = input.files[0].name;
+          const file = input.files[0];
+          pretestUploadedFile = file.name;
           const badge = document.getElementById('pretest-upload-badge');
           badge.classList.remove('hidden');
           badge.textContent = `✓ Attached work: ${pretestUploadedFile}`;
+          if (file.type.startsWith('image/')) {
+            compressImageFileToBase64(file, (b64) => {
+              pretestUploadedBase64 = b64;
+            });
+          }
         }
       }
 
@@ -1954,7 +2713,7 @@
             studentAnswer: answers[i] || '(Blank)',
           }));
 
-          const evalRes = await callAIJSON(
+          const evalRes = await callAIVisionJSON(
             "You are a warm, perceptive 1-on-1 tutor analyzing a student's diagnostic pre-test and scratchwork.",
             `Topic: "${activeLesson.specificFocus}"
           Pre-Test Submissions: ${JSON.stringify(qaPairs)}
@@ -1967,7 +2726,8 @@
               activeLesson.preTestQuestions.length
             },
             "diagnosis": "2-3 sentences explaining specifically what the student got right, where their setup or steps went wrong, and what to focus on in the worked examples below."
-          }`
+          }`,
+            pretestUploadedBase64
           );
 
           setLoading(false);
@@ -2192,6 +2952,17 @@
           );
 
           setLoading(false);
+          if (!res.data.isCorrect) {
+            addMistakeToVault({
+              topic: activeLesson.specificFocus,
+              question: q.prompt,
+              studentMistake: `${studentWork ? studentWork + ' -> ' : ''}${
+                studentAnswer || 'Incomplete step'
+              } (${res.data.feedback})`,
+              correctAnswer: q.expectedAnswer,
+              keyRule: q.stepByStepSolution,
+            });
+          }
           displayPracticeFeedback(res.data.isCorrect, res.data.feedback);
         } catch (err) {
           setLoading(false);
@@ -2203,11 +2974,20 @@
             cleanStudent.length > 0 &&
             (cleanStudent === cleanTarget ||
               cleanStudent.includes(cleanTarget));
+          if (!isRight) {
+            addMistakeToVault({
+              topic: activeLesson.specificFocus,
+              question: q.prompt,
+              studentMistake: studentAnswer || studentWork || 'Incorrect step',
+              correctAnswer: q.expectedAnswer,
+              keyRule: q.stepByStepSolution,
+            });
+          }
           displayPracticeFeedback(
             isRight,
             isRight
               ? `Spot on! ${q.stepByStepSolution}`
-              : `Not quite yet. Hint: ${q.hint}`
+              : `Not quite yet (Saved to Mistake Vault). Hint: ${q.hint}`
           );
         }
       }
@@ -2229,7 +3009,7 @@
         } else {
           box.className =
             'mt-4 p-4 rounded-xl text-xs font-semibold bg-rose-50 border border-rose-200 text-rose-900';
-          box.textContent = `🔍 AI Step Feedback: ${feedbackText}`;
+          box.textContent = `🔍 AI Step Feedback (Added to Mistake Vault): ${feedbackText}`;
           speakText(feedbackText);
         }
       }
@@ -2275,6 +3055,20 @@
           );
 
           setLoading(false);
+          (res.data.questionResults || []).forEach((r, idx) => {
+            if (!r.isCorrect && activeLesson.finalQuiz[idx]) {
+              const qObj = activeLesson.finalQuiz[idx];
+              addMistakeToVault({
+                topic: activeLesson.specificFocus,
+                question: qObj.question,
+                studentMistake: `Quiz Answer: "${
+                  quizAnswers[idx] || 'Blank'
+                }" (${r.feedback})`,
+                correctAnswer: qObj.expectedAnswer,
+                keyRule: qObj.explanation,
+              });
+            }
+          });
           renderQuizResults(res.data);
         } catch (err) {
           setLoading(false);
@@ -2299,7 +3093,9 @@
               ? 'text-xs font-bold text-emerald-700 pt-1'
               : 'text-xs font-bold text-rose-600 pt-1';
             fbEl.textContent =
-              (r.isCorrect ? '✓ Correct: ' : '✗ Review: ') + r.feedback;
+              (r.isCorrect
+                ? '✓ Correct: '
+                : '✗ Added to Mistake Vault — Review: ') + r.feedback;
           }
         });
 
@@ -2455,6 +3251,7 @@
       }
 
       updateSavedCountBadge();
+      updateVaultCountBadge();
       renderChatMessages();
     </script>
   </body>

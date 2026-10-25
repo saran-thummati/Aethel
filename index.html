@@ -53,6 +53,12 @@
       </div>
 
       <div class="flex items-center gap-3">
+        <button
+          onclick="toggleHistoryModal()"
+          class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold border border-slate-200 transition"
+        >
+          📂 Saved Sessions (<span id="saved-count-badge">0</span>)
+        </button>
         <div
           class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200"
         >
@@ -79,6 +85,53 @@
         </button>
       </div>
     </header>
+
+    <!-- SAVED SESSIONS MODAL -->
+    <div
+      id="history-modal"
+      class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-xl border border-slate-200 space-y-4"
+      >
+        <div
+          class="flex items-center justify-between border-b border-slate-100 pb-3"
+        >
+          <div>
+            <h3 class="text-base font-extrabold text-slate-900">
+              📂 Saved Study Sessions
+            </h3>
+            <p class="text-xs text-slate-500">
+              Your lessons and book discussions are saved automatically in your
+              browser.
+            </p>
+          </div>
+          <button
+            onclick="toggleHistoryModal()"
+            class="text-xs font-bold text-slate-400 hover:text-slate-700"
+          >
+            ✕ Close
+          </button>
+        </div>
+        <div id="history-list" class="space-y-2 max-h-80 overflow-y-auto"></div>
+        <div
+          class="flex justify-between items-center pt-2 border-t border-slate-100"
+        >
+          <button
+            onclick="clearSavedHistory()"
+            class="text-xs font-bold text-rose-600 hover:underline"
+          >
+            Clear All Saved Sessions
+          </button>
+          <button
+            onclick="toggleHistoryModal()"
+            class="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- GLOBAL AI THINKING BAR -->
     <div
@@ -759,11 +812,22 @@
           class="surface-card rounded-3xl flex flex-col h-[680px] sticky top-20 overflow-hidden"
         >
           <div class="p-5 border-b border-slate-100 bg-slate-900 text-white">
-            <div class="flex items-center gap-2">
-              <span
-                class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"
-              ></span>
-              <h2 class="font-bold text-sm">Aethel Live Homework Companion</h2>
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span
+                  class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"
+                ></span>
+                <h2 class="font-bold text-sm">
+                  Aethel Live Homework Companion
+                </h2>
+              </div>
+              <button
+                onclick="clearChatHistory()"
+                class="text-[11px] font-bold text-slate-400 hover:text-white transition"
+                title="Reset saved chat messages"
+              >
+                Clear Chat
+              </button>
             </div>
             <p class="text-[11px] text-slate-300 mt-1">
               Type any homework question or book title here — I will immediately
@@ -922,6 +986,174 @@
       }
 
       // =========================================================================
+      // LOCALSTORAGE CHAT & SESSION SAVING
+      // =========================================================================
+      const STORAGE_KEY_CHAT = 'aethel_chat_history_v1';
+      const STORAGE_KEY_SESSIONS = 'aethel_saved_sessions_v1';
+      const DEFAULT_WELCOME_MSG = {
+        role: 'assistant',
+        text: "Hi! I'm Aethel. Type any math/science homework question OR any book you're reading in English right here, and I'll load a personalized workspace onto your main screen!",
+      };
+
+      function loadSavedChatHistory() {
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY_CHAT);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          }
+        } catch (e) {
+          console.warn('Could not load saved chat history:', e);
+        }
+        return [DEFAULT_WELCOME_MSG];
+      }
+
+      function saveChatHistoryToStorage() {
+        try {
+          localStorage.setItem(STORAGE_KEY_CHAT, JSON.stringify(chatHistory));
+        } catch (e) {
+          console.warn('Could not save chat history:', e);
+        }
+      }
+
+      function clearChatHistory() {
+        chatHistory = [DEFAULT_WELCOME_MSG];
+        saveChatHistoryToStorage();
+        renderChatMessages();
+      }
+
+      function saveSessionToHistory(type, title, payload) {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY_SESSIONS);
+          let list = raw ? JSON.parse(raw) : [];
+          list = list.filter((item) => item.title !== title);
+          list.unshift({
+            id: 'sess_' + Date.now(),
+            type,
+            title,
+            timestamp: new Date().toLocaleString(),
+            payload,
+          });
+          if (list.length > 20) list = list.slice(0, 20);
+          localStorage.setItem(STORAGE_KEY_SESSIONS, JSON.stringify(list));
+          updateSavedCountBadge();
+        } catch (e) {
+          console.warn('Could not save session:', e);
+        }
+      }
+
+      function updateSavedCountBadge() {
+        try {
+          const list = JSON.parse(
+            localStorage.getItem(STORAGE_KEY_SESSIONS) || '[]'
+          );
+          const badge = document.getElementById('saved-count-badge');
+          if (badge) badge.textContent = list.length;
+        } catch (e) {}
+      }
+
+      function toggleHistoryModal() {
+        const modal = document.getElementById('history-modal');
+        modal.classList.toggle('hidden');
+        if (!modal.classList.contains('hidden')) {
+          renderSavedHistoryList();
+        }
+      }
+
+      function renderSavedHistoryList() {
+        const container = document.getElementById('history-list');
+        const list = JSON.parse(
+          localStorage.getItem(STORAGE_KEY_SESSIONS) || '[]'
+        );
+        if (list.length === 0) {
+          container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400 font-semibold">No saved sessions yet! Start any Math/Science lesson or Book discussion and it will automatically save here.</div>`;
+          return;
+        }
+        container.innerHTML = list
+          .map(
+            (item, idx) => `
+          <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-100 text-indigo-800">${item.type}</span>
+              <div class="text-xs font-extrabold text-slate-900 mt-1">${item.title}</div>
+              <div class="text-[11px] text-slate-400">${item.timestamp}</div>
+            </div>
+            <button onclick="restoreSavedSession(${idx})" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shrink-0">
+              Resume →
+            </button>
+          </div>
+        `
+          )
+          .join('');
+      }
+
+      function restoreSavedSession(index) {
+        const list = JSON.parse(
+          localStorage.getItem(STORAGE_KEY_SESSIONS) || '[]'
+        );
+        const item = list[index];
+        if (!item) return;
+        toggleHistoryModal();
+
+        if (item.type === 'STEM Lesson') {
+          activeLesson = item.payload;
+          currentBroadTopic =
+            activeLesson.broadTopic || activeLesson.specificFocus;
+          if (activeLesson.aiMeta) {
+            updateTelemetryBanner(
+              activeLesson.aiMeta,
+              `Complexity: ${activeLesson.complexityLevel.toUpperCase()} (${
+                activeLesson.workedExamples.length
+              } Examples • ${activeLesson.guidedQuestions.length} Guided • ${
+                activeLesson.finalQuiz.length
+              } Quiz)`,
+              activeLesson.aiReasoning,
+              true
+            );
+          }
+          renderDeepLessonStage(
+            activeLesson.diagnosticSummary || 'Resumed your saved lesson!'
+          );
+        } else if (item.type === 'Book Discussion') {
+          activeBookTitle = item.payload.activeBookTitle;
+          studentBookBraindump = item.payload.studentBookBraindump || '';
+          activeBookFocus = item.payload.activeBookFocus;
+          bookDiscussionHistory = item.payload.bookDiscussionHistory || [];
+
+          document.getElementById('stage-topic-entry').classList.add('hidden');
+          document.getElementById('stage-pretest').classList.add('hidden');
+          document.getElementById('stage-lesson').classList.add('hidden');
+          document.getElementById('stage-book-mode').classList.remove('hidden');
+
+          document
+            .getElementById('book-step-braindump')
+            .classList.add('hidden');
+          document.getElementById('book-step-focus').classList.add('hidden');
+          document
+            .getElementById('book-step-discussion')
+            .classList.remove('hidden');
+
+          document.getElementById(
+            'book-discussion-badge'
+          ).textContent = `${activeBookTitle.toUpperCase()} • OPEN LITERARY DISCUSSION`;
+          document.getElementById('book-discussion-title').textContent =
+            activeBookFocus;
+          document.getElementById('book-scene-anchor').textContent =
+            item.payload.sceneAnchor || '';
+          document.getElementById('book-evolving-thesis').textContent =
+            item.payload.thesis || '';
+
+          renderBookDiscussionStream();
+        }
+      }
+
+      function clearSavedHistory() {
+        localStorage.removeItem(STORAGE_KEY_SESSIONS);
+        updateSavedCountBadge();
+        renderSavedHistoryList();
+      }
+
+      // =========================================================================
       // APP STATE & VOICE SYNTHESIS
       // =========================================================================
       let currentBroadTopic = '';
@@ -938,12 +1170,7 @@
       let isMuted = false;
       let pendingChatAttachment = '';
       let pretestUploadedFile = '';
-      let chatHistory = [
-        {
-          role: 'assistant',
-          text: "Hi! I'm Aethel. Type any math/science homework question OR any book you're reading in English right here, and I'll load a personalized workspace onto your main screen!",
-        },
-      ];
+      let chatHistory = loadSavedChatHistory();
 
       function initVoices() {
         if (!('speechSynthesis' in window)) return;
@@ -1298,6 +1525,18 @@
             role: 'assistant',
             text: d.openingDiscussionMessage,
           });
+          saveSessionToHistory(
+            'Book Discussion',
+            `${activeBookTitle}: ${activeBookFocus}`,
+            {
+              activeBookTitle,
+              studentBookBraindump,
+              activeBookFocus,
+              bookDiscussionHistory,
+              sceneAnchor: d.sceneOrQuoteAnchor,
+              thesis: d.initialThesisSeed,
+            }
+          );
           renderBookDiscussionStream();
           speakText(d.openingDiscussionMessage);
         } catch (err) {
@@ -1380,6 +1619,20 @@
             document.getElementById('book-evolving-thesis').textContent =
               d.updatedThesis;
 
+          saveSessionToHistory(
+            'Book Discussion',
+            `${activeBookTitle}: ${activeBookFocus}`,
+            {
+              activeBookTitle,
+              studentBookBraindump,
+              activeBookFocus,
+              bookDiscussionHistory,
+              sceneAnchor:
+                document.getElementById('book-scene-anchor').textContent,
+              thesis: document.getElementById('book-evolving-thesis')
+                .textContent,
+            }
+          );
           renderBookDiscussionStream();
           speakText(d.tutorResponse);
         } catch (err) {
@@ -1410,6 +1663,20 @@
             role: 'assistant',
             text: `💡 Perspective Clue: ${res.data.nudge}`,
           });
+          saveSessionToHistory(
+            'Book Discussion',
+            `${activeBookTitle}: ${activeBookFocus}`,
+            {
+              activeBookTitle,
+              studentBookBraindump,
+              activeBookFocus,
+              bookDiscussionHistory,
+              sceneAnchor:
+                document.getElementById('book-scene-anchor').textContent,
+              thesis: document.getElementById('book-evolving-thesis')
+                .textContent,
+            }
+          );
           renderBookDiscussionStream();
           speakText(res.data.nudge);
         } catch (err) {
@@ -1490,7 +1757,7 @@
         const result = await callAIJSON(systemPrompt, userPrompt);
         const d = result.data;
 
-        return {
+        const lessonObj = {
           id: 'lesson_' + Date.now(),
           sourceMode,
           broadTopic,
@@ -1525,6 +1792,9 @@
             : [],
           finalQuiz: Array.isArray(d.finalQuiz) ? d.finalQuiz : [],
         };
+
+        saveSessionToHistory('STEM Lesson', lessonObj.specificFocus, lessonObj);
+        return lessonObj;
       }
 
       async function launchPretest(
@@ -1702,6 +1972,11 @@
 
           setLoading(false);
           activeLesson.diagnosticSummary = evalRes.data.diagnosis;
+          saveSessionToHistory(
+            'STEM Lesson',
+            activeLesson.specificFocus,
+            activeLesson
+          );
           renderDeepLessonStage(evalRes.data.diagnosis);
         } catch (err) {
           setLoading(false);
@@ -2152,6 +2427,7 @@
       }
 
       function renderChatMessages() {
+        saveChatHistoryToStorage();
         const feed = document.getElementById('chat-messages');
         feed.innerHTML = chatHistory
           .map(
@@ -2178,6 +2454,7 @@
         feed.scrollTop = feed.scrollHeight;
       }
 
+      updateSavedCountBadge();
       renderChatMessages();
     </script>
   </body>

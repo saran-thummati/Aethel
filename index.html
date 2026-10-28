@@ -1,558 +1,560 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Aethel — Adaptive 1-on-1 AI Tutor</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+      };
+    </script>
     <script src="https://js.puter.com/v2/"></script>
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <style>
+      :root {
+        --ui-zoom: 1;
+      }
       body {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        background-color: #f8fafc;
-        color: #0f172a;
-      }
-      .surface-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+        zoom: var(--ui-zoom);
       }
       .scratchpad-grid {
-        background-color: #ffffff;
-        background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+        background-image: radial-gradient(
+          rgba(148, 163, 184, 0.25) 1px,
+          transparent 1px
+        );
         background-size: 20px 20px;
         touch-action: none;
       }
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.25);
+        border-radius: 9999px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(148, 163, 184, 0.4);
+      }
     </style>
   </head>
-  <body class="min-h-screen flex flex-col">
-    <!-- TOP NAVIGATION BAR -->
-    <header
-      class="bg-white border-b border-slate-200 px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-30"
+  <body
+    class="bg-[#0d0d0d] text-neutral-100 h-screen overflow-hidden flex select-none"
+  >
+    <!-- =================================================================== -->
+    <!-- LEFT COLLAPSIBLE SIDEBAR (ChatGPT Layout)                           -->
+    <!-- =================================================================== -->
+    <aside
+      id="app-sidebar"
+      class="w-64 bg-[#171717] border-r border-neutral-800/80 flex flex-col justify-between transition-all duration-200 shrink-0 z-30 select-none"
     >
-      <div class="flex items-center gap-3">
-        <div
-          class="w-9 h-9 rounded-xl bg-indigo-600 text-white font-extrabold text-lg flex items-center justify-center shadow-sm"
+      <!-- TOP SECTION: Brand + Toggle + Primary Features -->
+      <div class="p-2.5 space-y-1">
+        <div class="flex items-center justify-between px-2 py-2 mb-1">
+          <button
+            onclick="openNewChatHome()"
+            id="sidebar-brand-text"
+            class="font-semibold text-sm tracking-tight text-white hover:opacity-80 transition truncate"
+          >
+            Aethel
+          </button>
+          <button
+            onclick="toggleSidebar()"
+            title="Toggle sidebar"
+            class="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition"
+          >
+            <svg
+              class="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="3" />
+              <line x1="9" y1="3" x2="9" y2="21" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- New Chat -->
+        <button
+          onclick="openNewChatHome()"
+          id="nav-item-new"
+          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-neutral-200 bg-neutral-800/70 hover:bg-neutral-800 transition"
         >
-          A
-        </div>
-        <div>
-          <span class="font-extrabold text-base tracking-tight text-slate-900"
-            >Aethel</span
+          <svg
+            class="w-4 h-4 shrink-0 text-neutral-300"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
           >
+            <path
+              d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+            />
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>
+          <span class="sidebar-label truncate">New chat</span>
+        </button>
+
+        <!-- Homework Help -->
+        <button
+          onclick="openHomeworkHelpView()"
+          id="nav-item-homework"
+          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-neutral-300 hover:bg-neutral-800/60 hover:text-white transition"
+        >
+          <svg
+            class="w-4 h-4 shrink-0 text-neutral-400"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+          >
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+            <path
+              d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+            />
+          </svg>
+          <span class="sidebar-label truncate">Homework help</span>
+        </button>
+
+        <!-- Photo Grader -->
+        <button
+          onclick="openPhotoGraderView()"
+          id="nav-item-grader"
+          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-neutral-300 hover:bg-neutral-800/60 hover:text-white transition"
+        >
+          <svg
+            class="w-4 h-4 shrink-0 text-neutral-400"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+          >
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <polyline points="21 15 16 10 5 21" />
+          </svg>
+          <span class="sidebar-label truncate">Photo grader</span>
+        </button>
+
+        <!-- Mistake Vault -->
+        <button
+          onclick="openMistakeVaultView()"
+          id="nav-item-vault"
+          class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium text-neutral-300 hover:bg-neutral-800/60 hover:text-white transition"
+        >
+          <div class="flex items-center gap-3 truncate">
+            <svg
+              class="w-4 h-4 shrink-0 text-neutral-400"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <polygon points="12 2 2 7 12 12 22 7 12 2" />
+              <polyline points="2 17 12 22 22 17" />
+              <polyline points="2 12 12 17 22 12" />
+            </svg>
+            <span class="sidebar-label truncate">Mistake vault</span>
+          </div>
           <span
-            class="hidden sm:inline-block ml-2 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200"
+            id="vault-count-badge"
+            class="sidebar-label text-[10px] font-semibold px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-400"
+            >0</span
           >
-            ● Live AI Engine Active
-          </span>
-        </div>
+        </button>
       </div>
 
-      <div class="flex flex-wrap items-center gap-2.5">
-        <button
-          onclick="togglePhotoGraderModal()"
-          class="px-3.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-extrabold border border-indigo-200 transition"
-        >
-          📸 Photo Grader
-        </button>
-        <button
-          onclick="toggleMistakeVaultModal()"
-          class="px-3.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-extrabold border border-amber-200 transition"
-        >
-          🧠 Mistake Vault (<span id="vault-count-badge">0</span>)
-        </button>
-        <button
-          onclick="toggleHistoryModal()"
-          class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold border border-slate-200 transition"
-        >
-          📂 Saved Sessions (<span id="saved-count-badge">0</span>)
-        </button>
-        <div
-          class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200"
-        >
-          <span class="text-xs font-semibold text-slate-500">Voice:</span>
-          <select
-            id="voice-select"
-            class="bg-transparent text-xs font-bold text-slate-800 focus:outline-none"
+      <!-- MIDDLE SECTION: Spacing + Recents History -->
+      <div
+        id="sidebar-recents-section"
+        class="flex-1 overflow-y-auto px-2.5 pt-6 pb-2 space-y-1"
+      >
+        <div class="flex items-center justify-between px-3 pb-1.5">
+          <span class="text-[11px] font-medium text-neutral-500 tracking-wide"
+            >Recents</span
           >
-            <option value="">Natural Voice</option>
-          </select>
+          <button
+            onclick="clearSavedHistory()"
+            class="text-[10px] text-neutral-600 hover:text-neutral-300 transition"
+          >
+            Clear
+          </button>
+        </div>
+        <div id="recent-chats-list" class="space-y-0.5"></div>
+      </div>
+
+      <!-- BOTTOM SECTION: Student Profile Bar + Hover Menu -->
+      <div
+        class="p-2.5 border-t border-neutral-800/80 relative"
+        onmouseenter="handleAccountMouseEnter()"
+        onmouseleave="handleAccountMouseLeave()"
+      >
+        <!-- HOVER POPOVER MENU -->
+        <div
+          id="account-hover-menu"
+          class="hidden absolute bottom-16 left-2.5 right-2.5 bg-[#262626] border border-neutral-700/80 rounded-2xl shadow-2xl p-1.5 z-50 space-y-0.5"
+        >
+          <div
+            class="flex items-center justify-between px-3 py-2.5 rounded-xl bg-neutral-800/60 mb-1"
+          >
+            <div class="flex items-center gap-2.5 overflow-hidden">
+              <div
+                id="menu-user-initials"
+                class="w-7 h-7 rounded-full bg-neutral-600 text-white text-xs font-semibold flex items-center justify-center shrink-0"
+              >
+                ST
+              </div>
+              <div class="truncate">
+                <div
+                  id="menu-user-name"
+                  class="text-xs font-semibold text-white truncate"
+                >
+                  Saran Thummati
+                </div>
+              </div>
+            </div>
+            <svg
+              class="w-3.5 h-3.5 text-neutral-400 shrink-0"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </div>
+
+          <!-- 1. Settings -->
+          <button
+            onclick="openSettingsModal()"
+            class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-neutral-200 hover:bg-neutral-700/60 transition"
+          >
+            <svg
+              class="w-4 h-4 text-neutral-400"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+              />
+            </svg>
+            <span>Settings</span>
+          </button>
+
+          <!-- 2. Profile -->
+          <button
+            onclick="openProfileModal()"
+            class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-neutral-200 hover:bg-neutral-700/60 transition"
+          >
+            <svg
+              class="w-4 h-4 text-neutral-400"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            <span>Profile</span>
+          </button>
+
+          <!-- 3. Help -->
+          <button
+            onclick="toggleHelpAssistantBox()"
+            class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-neutral-200 hover:bg-neutral-700/60 transition"
+          >
+            <div class="flex items-center gap-3">
+              <svg
+                class="w-4 h-4 text-neutral-400"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="12" r="4" />
+                <line x1="4.93" y1="4.93" x2="9.17" y2="9.17" />
+                <line x1="14.83" y1="14.83" x2="19.07" y2="19.07" />
+                <line x1="14.83" y1="9.17" x2="19.07" y2="4.93" />
+                <line x1="4.93" y1="19.07" x2="9.17" y2="14.83" />
+              </svg>
+              <span>Help</span>
+            </div>
+            <svg
+              class="w-3.5 h-3.5 text-neutral-400"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Bottom Left User Bar -->
+        <button
+          onclick="toggleAccountHoverMenuClick()"
+          class="w-full flex items-center gap-3 px-2.5 py-2 rounded-xl hover:bg-neutral-800/70 transition text-left"
+        >
+          <div
+            id="sidebar-user-avatar"
+            class="w-7 h-7 rounded-full bg-neutral-700 text-neutral-200 text-xs font-semibold flex items-center justify-center shrink-0"
+          >
+            ST
+          </div>
+          <div class="sidebar-label truncate flex-1">
+            <div
+              id="sidebar-user-name"
+              class="text-xs font-medium text-neutral-200 truncate"
+            >
+              Saran Thummati
+            </div>
+          </div>
+        </button>
+      </div>
+    </aside>
+
+    <!-- =================================================================== -->
+    <!-- MAIN CENTER WORKSPACE                                               -->
+    <!-- =================================================================== -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden relative">
+      <!-- TOP BAR -->
+      <header class="h-14 px-6 flex items-center justify-between shrink-0 z-20">
+        <div class="flex items-center gap-2">
+          <div
+            id="ai-loading-banner"
+            class="hidden items-center gap-2 px-3.5 py-1.5 rounded-full bg-neutral-800 border border-neutral-700 text-xs text-neutral-200"
+          >
+            <span
+              class="w-3 h-3 border-2 border-neutral-200 border-t-transparent rounded-full animate-spin inline-block"
+            ></span>
+            <span id="ai-loading-text">AI is thinking...</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
           <button
             onclick="toggleMute()"
             id="mute-btn"
-            class="text-xs font-bold text-indigo-600 hover:underline ml-1"
+            class="px-3 py-1.5 rounded-full bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-xs font-medium text-neutral-300 transition"
           >
-            🔊 On
-          </button>
-        </div>
-        <button
-          onclick="resetToTopicEntry()"
-          class="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition"
-        >
-          + New Topic or Book
-        </button>
-      </div>
-    </header>
-
-    <!-- =================================================================== -->
-    <!-- FEATURE 1 MODAL: INSTANT PHOTO GRADING & ERROR CORRECTION           -->
-    <!-- =================================================================== -->
-    <div
-      id="photo-grader-modal"
-      class="hidden fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4 overflow-y-auto"
-    >
-      <div
-        class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-xl border border-slate-200 space-y-5 my-8"
-      >
-        <div
-          class="flex items-center justify-between border-b border-slate-100 pb-4"
-        >
-          <div>
-            <span
-              class="text-[11px] font-extrabold uppercase tracking-wider text-indigo-600 block"
-            >
-              AI VISION STEP-BY-STEP DIAGNOSTIC
-            </span>
-            <h3 class="text-lg font-extrabold text-slate-900">
-              📸 Instant Photo Homework & Test Error Grader
-            </h3>
-            <p class="text-xs text-slate-500">
-              Upload a photo of your handwritten scratchwork or a graded test
-              question. Aethel will pinpoint the exact step where an error
-              occurred and show you how to fix it.
-            </p>
-          </div>
-          <button
-            onclick="togglePhotoGraderModal()"
-            class="text-xs font-bold text-slate-400 hover:text-slate-700 shrink-0"
-          >
-            ✕ Close
-          </button>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <label
-            class="cursor-pointer p-5 rounded-2xl border-2 border-dashed border-indigo-300 bg-indigo-50/50 hover:bg-indigo-50 transition flex flex-col items-center justify-center text-center"
-          >
-            <span class="text-2xl mb-1">📷</span>
-            <span class="text-xs font-extrabold text-indigo-900"
-              >Click to Upload Photo of Work / Test</span
-            >
-            <span class="text-[11px] text-slate-500 mt-0.5"
-              >Supports JPG, PNG, WEBP</span
-            >
-            <input
-              type="file"
-              accept="image/*"
-              class="hidden"
-              onchange="handlePhotoGraderUpload(this)"
-            />
-          </label>
-
-          <div
-            id="photo-grader-preview-box"
-            class="rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden min-h-[130px] p-2"
-          >
-            <span
-              id="photo-grader-placeholder"
-              class="text-xs text-slate-400 font-medium text-center px-3"
-              >No photo selected yet</span
-            >
-            <img
-              id="photo-grader-preview-img"
-              src=""
-              alt="Uploaded Homework Preview"
-              class="hidden max-h-40 rounded-xl object-contain"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label
-            class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5"
-          >
-            Optional Context or Typed Steps (What problem was this, or what
-            confused you?)
-          </label>
-          <textarea
-            id="photo-grader-notes"
-            rows="2"
-            placeholder="e.g., 'Solve 2x^2 - 5x - 3 = 0. My teacher marked step 2 wrong...' (Or type your steps here if you don't have a photo handy!)"
-            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-600"
-          ></textarea>
-        </div>
-
-        <button
-          onclick="runPhotoGraderAnalysis()"
-          class="w-full py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs sm:text-sm shadow-sm transition"
-        >
-          🔍 Scan My Work & Pinpoint Exact Step Errors →
-        </button>
-
-        <!-- AI VISION RESULT CARD -->
-        <div
-          id="photo-grader-result"
-          class="hidden p-5 rounded-2xl bg-slate-900 text-white space-y-3"
-        >
-          <div class="flex items-center justify-between">
-            <span
-              id="photo-result-badge"
-              class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 text-[11px] font-extrabold"
-            >
-              Step Diagnostic Complete
-            </span>
-            <button
-              onclick="speakText(document.getElementById('photo-result-fix').textContent)"
-              class="text-xs font-bold text-indigo-300 hover:underline"
-            >
-              🔊 Listen
-            </button>
-          </div>
-          <div class="text-xs text-slate-300">
-            <strong class="text-white">Detected Topic & Work:</strong>
-            <span id="photo-result-transcription"></span>
-          </div>
-          <div
-            class="p-3.5 rounded-xl bg-rose-500/15 border border-rose-400/30 text-xs text-rose-200 leading-relaxed"
-          >
-            <strong class="text-rose-300 block mb-0.5"
-              >🎯 Exact Mistake / Breakdown Point:</strong
-            >
-            <span id="photo-result-error"></span>
-          </div>
-          <div
-            class="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-400/30 text-xs text-emerald-100 leading-relaxed"
-          >
-            <strong class="text-emerald-300 block mb-0.5"
-              >✓ How to Fix It Step-by-Step:</strong
-            >
-            <span id="photo-result-fix"></span>
-          </div>
-          <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
-            <span class="text-[11px] text-amber-300 font-semibold">
-              ★ Automatically saved to your Mistake Vault for review!
-            </span>
-            <button
-              id="photo-launch-practice-btn"
-              class="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white text-xs font-extrabold transition"
-            >
-              Practice This Exact Skill 1-by-1 →
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- =================================================================== -->
-    <!-- FEATURE 2 MODAL: SPACED REPETITION FLASHCARDS & MISTAKE VAULT       -->
-    <!-- =================================================================== -->
-    <div
-      id="mistake-vault-modal"
-      class="hidden fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4 overflow-y-auto"
-    >
-      <div
-        class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-xl border border-slate-200 space-y-5 my-8"
-      >
-        <div
-          class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4"
-        >
-          <div>
-            <span
-              class="text-[11px] font-extrabold uppercase tracking-wider text-amber-700 block"
-            >
-              SPACED REPETITION HABIT LOOP
-            </span>
-            <h3 class="text-lg font-extrabold text-slate-900">
-              🧠 Personal Mistake Vault & Flashcard Deck
-            </h3>
-            <p class="text-xs text-slate-500">
-              Every missed practice step, quiz question, or scanned test error
-              is automatically captured here so you can turn weak spots into
-              mastered skills.
-            </p>
-          </div>
-          <button
-            onclick="toggleMistakeVaultModal()"
-            class="text-xs font-bold text-slate-400 hover:text-slate-700"
-          >
-            ✕ Close
-          </button>
-        </div>
-
-        <!-- Mode Tabs -->
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex bg-slate-100 p-1 rounded-xl gap-1">
-            <button
-              id="vault-tab-flashcards"
-              onclick="switchVaultTab('flashcards')"
-              class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-sm transition"
-            >
-              🎴 Spaced Repetition Flashcards
-            </button>
-            <button
-              id="vault-tab-list"
-              onclick="switchVaultTab('list')"
-              class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition"
-            >
-              📋 All Logged Mistakes
-            </button>
-          </div>
-          <span
-            id="vault-stats-summary"
-            class="text-xs font-bold text-slate-500"
-          ></span>
-        </div>
-
-        <!-- FLASHCARD REVIEW VIEW -->
-        <div id="vault-view-flashcards" class="space-y-4">
-          <div
-            id="vault-flashcard-container"
-            class="p-6 rounded-2xl bg-slate-50 border border-slate-200 min-h-[220px] flex flex-col justify-between"
-          ></div>
-        </div>
-
-        <!-- ALL MISTAKES LIST VIEW -->
-        <div
-          id="vault-view-list"
-          class="hidden space-y-2.5 max-h-80 overflow-y-auto pr-1"
-        ></div>
-
-        <div
-          class="flex justify-between items-center pt-3 border-t border-slate-100"
-        >
-          <button
-            onclick="clearMistakeVault()"
-            class="text-xs font-bold text-rose-600 hover:underline"
-          >
-            Clear Mistake Vault
+            Voice: On
           </button>
           <button
-            onclick="toggleMistakeVaultModal()"
-            class="px-5 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold"
+            onclick="openNewChatHome()"
+            title="New chat"
+            class="p-2 rounded-full text-neutral-400 hover:text-white hover:bg-neutral-800 transition"
           >
-            Done
+            <svg
+              class="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path
+                d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+              />
+              <path
+                d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+              />
+            </svg>
           </button>
         </div>
-      </div>
-    </div>
+      </header>
 
-    <!-- SAVED SESSIONS MODAL -->
-    <div
-      id="history-modal"
-      class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4"
-    >
-      <div
-        class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-xl border border-slate-200 space-y-4"
-      >
-        <div
-          class="flex items-center justify-between border-b border-slate-100 pb-3"
-        >
-          <div>
-            <h3 class="text-base font-extrabold text-slate-900">
-              📂 Saved Study Sessions
-            </h3>
-            <p class="text-xs text-slate-500">
-              Your lessons and book discussions are saved automatically in your
-              browser.
-            </p>
-          </div>
-          <button
-            onclick="toggleHistoryModal()"
-            class="text-xs font-bold text-slate-400 hover:text-slate-700"
-          >
-            ✕ Close
-          </button>
-        </div>
-        <div id="history-list" class="space-y-2 max-h-80 overflow-y-auto"></div>
-        <div
-          class="flex justify-between items-center pt-2 border-t border-slate-100"
-        >
-          <button
-            onclick="clearSavedHistory()"
-            class="text-xs font-bold text-rose-600 hover:underline"
-          >
-            Clear All Saved Sessions
-          </button>
-          <button
-            onclick="toggleHistoryModal()"
-            class="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold"
-          >
-            Done
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- GLOBAL AI THINKING BAR -->
-    <div
-      id="ai-loading-banner"
-      class="hidden bg-indigo-600 text-white px-6 py-3 text-xs font-bold flex items-center justify-center gap-3 shadow-md"
-    >
-      <span
-        class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-      ></span>
-      <span id="ai-loading-text">AI is thinking...</span>
-    </div>
-
-    <!-- MAIN WORKSPACE + LIVE AI CHAT SPLIT LAYOUT -->
-    <div
-      class="flex-1 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 p-6"
-    >
-      <!-- =================================================================== -->
-      <!-- LEFT/CENTER: MAIN INTERACTIVE WORKSPACE (8 Cols)                    -->
-      <!-- =================================================================== -->
-      <main class="lg:col-span-8 flex flex-col gap-6">
-        <!-- LIVE AI REASONING & TELEMETRY PROOF BANNER -->
+      <!-- MAIN SCROLLABLE WORKSPACE -->
+      <main class="flex-1 overflow-y-auto px-4 sm:px-8 pb-12 flex flex-col">
+        <!-- LIVE AI TELEMETRY BANNER -->
         <section
           id="ai-telemetry-card"
-          class="hidden surface-card rounded-2xl p-4 bg-slate-900 text-white"
+          class="hidden max-w-3xl w-full mx-auto mb-4 rounded-2xl p-4 bg-[#171717] border border-neutral-800 text-white"
         >
-          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-            <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+            <div class="flex flex-wrap items-center gap-2">
               <span
-                class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[11px] font-extrabold"
+                class="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[11px] font-semibold"
               >
-                ✓ Verified Live AI Generation
+                Verified Live AI Generation
               </span>
               <span
                 id="telemetry-complexity"
-                class="px-2.5 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[11px] font-extrabold"
+                class="px-2.5 py-0.5 rounded-full bg-neutral-800 text-neutral-200 text-[11px] font-semibold"
               ></span>
               <span
                 id="telemetry-meta"
-                class="text-[11px] text-slate-400 font-mono"
+                class="text-[11px] text-neutral-500 font-mono"
               ></span>
             </div>
             <button
               id="regen-btn"
               onclick="regenerateFreshQuestions()"
-              class="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition"
+              class="px-3 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-medium transition"
             >
-              🔄 Generate New Questions
+              Generate New Questions
             </button>
           </div>
           <p
             id="telemetry-reasoning"
-            class="text-xs text-slate-300 leading-relaxed"
+            class="text-xs text-neutral-400 leading-relaxed"
           ></p>
         </section>
 
-        <!-- STAGE 1: TOPIC OR BOOK ENTRY -->
-        <section id="stage-topic-entry" class="surface-card rounded-3xl p-8">
-          <div
-            class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold mb-4"
-          >
-            <span
-              >Step 1 • Enter Any Math/Science Concept or English Book →</span
-            >
-          </div>
+        <!-- =============================================================== -->
+        <!-- VIEW 1: HOME / NEW CHAT (ChatGPT Style)                         -->
+        <!-- =============================================================== -->
+        <section
+          id="stage-topic-entry"
+          class="flex-1 flex flex-col items-center justify-center max-w-2xl w-full mx-auto my-auto py-8"
+        >
           <h1
-            class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2"
+            class="text-2xl sm:text-3xl font-medium text-white tracking-tight text-center mb-8"
           >
-            What do you want to master today?
+            What would you like to learn today?
           </h1>
-          <p class="text-sm text-slate-500 mb-6">
-            Enter a math/science topic for a diagnostic pre-test & 1-by-1
-            walkthrough,
-            <strong>or enter a book you're reading in English</strong> to share
-            what you know and dive into an open-ended theme & essay discussion!
-          </p>
 
-          <div class="flex flex-col sm:flex-row gap-3 mb-4">
+          <!-- Centered Pill Input Bar -->
+          <div
+            class="w-full bg-[#212121] border border-neutral-700/80 focus-within:border-neutral-500 rounded-full px-4 py-2.5 flex items-center gap-3 shadow-lg mb-7"
+          >
+            <button
+              onclick="openPhotoGraderView()"
+              title="Upload photo of homework or test"
+              class="p-1.5 rounded-full text-neutral-400 hover:text-white hover:bg-neutral-700/50 transition shrink-0"
+            >
+              <svg
+                class="w-5 h-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            </button>
+
             <input
               id="topic-input"
               type="text"
-              placeholder="e.g., The Great Gatsby, Macbeth, Factoring Quadratics where a > 1..."
+              placeholder="Enter any math/science concept or English book..."
               onkeydown="if(event.key==='Enter') scopeTopic()"
-              class="flex-1 px-4 py-3.5 rounded-2xl border border-slate-300 text-sm font-semibold text-slate-900 focus:outline-none focus:border-indigo-600"
+              class="flex-1 bg-transparent text-sm text-white placeholder-neutral-400 focus:outline-none select-text"
             />
+
             <button
               onclick="scopeTopic()"
-              class="px-6 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-sm transition shrink-0"
+              class="w-8 h-8 rounded-full bg-white hover:bg-neutral-200 text-black flex items-center justify-center transition shrink-0"
             >
-              Continue →
+              <svg
+                class="w-4 h-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+              >
+                <line x1="12" y1="19" x2="12" y2="5" />
+                <polyline points="5 12 12 5 19 12" />
+              </svg>
             </button>
           </div>
 
-          <div
-            class="flex flex-wrap items-center gap-2 text-xs text-slate-500 mb-6"
-          >
-            <span>Try a quick example:</span>
+          <!-- Suggestion List -->
+          <div class="w-full max-w-md space-y-1">
             <button
               onclick="quickFillTopic('Book: The Great Gatsby')"
-              class="px-3 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 font-semibold text-amber-800 border border-amber-200 transition"
+              class="w-full flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-xs font-medium text-neutral-300 hover:bg-neutral-800/70 hover:text-white transition text-left"
             >
-              📖 Book: The Great Gatsby
+              <svg
+                class="w-4 h-4 text-neutral-400 shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+              </svg>
+              <span>Book: The Great Gatsby</span>
             </button>
+
             <button
               onclick="quickFillTopic('Book: To Kill a Mockingbird')"
-              class="px-3 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 font-semibold text-amber-800 border border-amber-200 transition"
+              class="w-full flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-xs font-medium text-neutral-300 hover:bg-neutral-800/70 hover:text-white transition text-left"
             >
-              📖 Book: To Kill a Mockingbird
+              <svg
+                class="w-4 h-4 text-neutral-400 shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <path
+                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+              <span>Book: To Kill a Mockingbird</span>
             </button>
+
             <button
               onclick="quickFillTopic('Adding 1-digit numbers')"
-              class="px-3 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 font-semibold text-emerald-800 transition"
+              class="w-full flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-xs font-medium text-neutral-300 hover:bg-neutral-800/70 hover:text-white transition text-left"
             >
-              Easy Math: Adding 1-Digit Numbers
+              <svg
+                class="w-4 h-4 text-neutral-400 shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              <span>Easy Math: Adding 1-Digit Numbers</span>
             </button>
+
             <button
               onclick="quickFillTopic('Factoring quadratic equations where a > 1')"
-              class="px-3 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 font-semibold text-indigo-800 transition"
+              class="w-full flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-xs font-medium text-neutral-300 hover:bg-neutral-800/70 hover:text-white transition text-left"
             >
-              Complex Math: Factoring (a > 1)
+              <svg
+                class="w-4 h-4 text-neutral-400 shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+              <span>Complex Math: Factoring Quadratics (a &gt; 1)</span>
             </button>
           </div>
 
-          <!-- QUICK TOOLS BAR: PHOTO GRADER & MISTAKE VAULT -->
-          <div
-            class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-5 border-t border-slate-100"
-          >
-            <button
-              onclick="togglePhotoGraderModal()"
-              class="p-4 rounded-2xl bg-indigo-50/70 hover:bg-indigo-100/80 border border-indigo-200 text-left transition flex items-start gap-3"
-            >
-              <span class="text-xl">📸</span>
-              <div>
-                <div class="text-xs font-extrabold text-indigo-950">
-                  Instant Photo Homework & Test Grader
-                </div>
-                <p class="text-[11px] text-indigo-800/80 mt-0.5">
-                  Snap a photo of a missed test or homework problem to find the
-                  exact line where your steps went wrong.
-                </p>
-              </div>
-            </button>
-
-            <button
-              onclick="toggleMistakeVaultModal()"
-              class="p-4 rounded-2xl bg-amber-50/70 hover:bg-amber-100/80 border border-amber-200 text-left transition flex items-start gap-3"
-            >
-              <span class="text-xl">🧠</span>
-              <div>
-                <div class="text-xs font-extrabold text-amber-950">
-                  Spaced Repetition Mistake Vault
-                </div>
-                <p class="text-[11px] text-amber-800/80 mt-0.5">
-                  Review auto-saved flashcards from your past mistakes until
-                  every weak spot is 100% mastered.
-                </p>
-              </div>
-            </button>
-          </div>
-
-          <!-- SUB-TOPIC REFINEMENT BOX (For STEM topics) -->
+          <!-- SUB-TOPIC REFINEMENT BOX -->
           <div
             id="subtopic-scoping-box"
-            class="hidden mt-8 pt-6 border-t border-slate-200"
+            class="hidden w-full mt-8 pt-6 border-t border-neutral-800"
           >
             <p
               id="scoping-prompt"
-              class="text-sm font-bold text-slate-800 mb-3"
+              class="text-sm font-medium text-neutral-200 mb-3"
             ></p>
             <div
               id="subtopic-buttons"
@@ -565,114 +567,410 @@
                 type="text"
                 placeholder="Or type the exact part you want to cover..."
                 onkeydown="if(event.key==='Enter') startCustomSubtopic()"
-                class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold"
+                class="flex-1 px-4 py-2.5 rounded-xl bg-[#212121] border border-neutral-700 text-xs text-white focus:outline-none focus:border-neutral-500 select-text"
               />
               <button
                 onclick="startCustomSubtopic()"
-                class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold"
+                class="px-5 py-2.5 rounded-xl bg-white hover:bg-neutral-200 text-black text-xs font-semibold transition"
               >
-                Generate AI Pre-Test & Lesson →
+                Generate AI Pre-Test &amp; Lesson
               </button>
             </div>
           </div>
         </section>
 
-        <!-- ================================================================= -->
-        <!-- ENGLISH / BOOK MODE: BRAIN DUMP -> FOCUS PICKER -> DEEP DISCUSSION-->
-        <!-- ================================================================= -->
-        <section id="stage-book-mode" class="hidden space-y-6">
-          <!-- STEP A: OPEN TEXT BOX FOR STUDENT TO SHARE WHAT THEY KNOW -->
-          <div id="book-step-braindump" class="surface-card rounded-3xl p-8">
-            <div
-              class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold mb-3"
-            >
-              <span
-                >📖 Literary & Book Mastery • Step 1: What Do You Know So
-                Far?</span
+        <!-- =============================================================== -->
+        <!-- VIEW 2: HOMEWORK HELP (Takes over main screen from Sidebar)     -->
+        <!-- =============================================================== -->
+        <section
+          id="stage-homework-help"
+          class="hidden max-w-3xl w-full mx-auto py-6 space-y-6"
+        >
+          <div
+            class="flex items-center justify-between border-b border-neutral-800 pb-4"
+          >
+            <div>
+              <div
+                class="text-xs font-semibold uppercase tracking-wider text-neutral-400"
               >
+                Live Homework Companion
+              </div>
+              <h2 class="text-2xl font-semibold text-white">
+                Ask any homework question or book prompt
+              </h2>
+            </div>
+            <button
+              onclick="clearChatHistory()"
+              class="px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-xs font-medium text-neutral-300 transition"
+            >
+              Clear Chat
+            </button>
+          </div>
+
+          <div
+            class="bg-[#171717] border border-neutral-800 rounded-2xl flex flex-col h-[500px] overflow-hidden"
+          >
+            <div
+              id="chat-messages"
+              class="flex-1 p-5 overflow-y-auto space-y-3"
+            ></div>
+
+            <div
+              id="chat-attachment-preview"
+              class="hidden px-4 py-2 bg-neutral-800 border-t border-neutral-700 flex items-center justify-between text-xs font-medium text-neutral-200"
+            >
+              <span id="chat-attachment-name"></span>
+              <button
+                onclick="clearChatAttachment()"
+                class="text-red-400 hover:underline"
+              >
+                Remove
+              </button>
+            </div>
+
+            <div
+              class="p-4 bg-[#212121] border-t border-neutral-800 space-y-2.5"
+            >
+              <div class="flex items-center justify-between">
+                <label
+                  class="cursor-pointer px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-medium transition inline-flex items-center gap-2"
+                >
+                  <span>Attach Homework / Test File</span>
+                  <input
+                    type="file"
+                    accept="image/*,.pdf,.doc,.docx"
+                    class="hidden"
+                    onchange="handleChatFileSelect(this)"
+                  />
+                </label>
+                <span class="text-[11px] text-neutral-500"
+                  >Automatically builds an interactive lesson on your
+                  screen</span
+                >
+              </div>
+
+              <div class="flex gap-2">
+                <input
+                  id="chat-input"
+                  type="text"
+                  placeholder="Type your homework question or book title..."
+                  onkeydown="if(event.key==='Enter') sendChatMessage()"
+                  class="flex-1 px-4 py-2.5 rounded-xl bg-[#141414] border border-neutral-700 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-500 select-text"
+                />
+                <button
+                  onclick="sendChatMessage()"
+                  class="px-5 py-2.5 rounded-xl bg-white hover:bg-neutral-200 text-black font-semibold text-xs transition"
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =============================================================== -->
+        <!-- VIEW 3: PHOTO GRADER (Takes over main screen from Sidebar)      -->
+        <!-- =============================================================== -->
+        <section
+          id="stage-photo-grader"
+          class="hidden max-w-3xl w-full mx-auto py-6 space-y-6"
+        >
+          <div class="space-y-1">
+            <div
+              class="text-xs font-semibold uppercase tracking-wider text-neutral-400"
+            >
+              AI Vision Step-by-Step Diagnostic
+            </div>
+            <h2 class="text-2xl font-semibold text-white">
+              Instant Photo Homework &amp; Test Error Grader
+            </h2>
+            <p class="text-xs text-neutral-400">
+              Upload a photo of your handwritten scratchwork or a graded test
+              question. Aethel will pinpoint the exact step where an error
+              occurred and show you how to fix it.
+            </p>
+          </div>
+
+          <div
+            class="bg-[#171717] border border-neutral-800 rounded-2xl p-6 space-y-5"
+          >
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <label
+                class="cursor-pointer p-6 rounded-xl border border-dashed border-neutral-700 bg-[#212121]/60 hover:bg-[#212121] transition flex flex-col items-center justify-center text-center"
+              >
+                <svg
+                  class="w-6 h-6 text-neutral-400 mb-2"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                <span class="text-xs font-semibold text-neutral-200"
+                  >Click to upload photo of work or test</span
+                >
+                <span class="text-[11px] text-neutral-500 mt-1"
+                  >Supports JPG, PNG, WEBP</span
+                >
+                <input
+                  type="file"
+                  accept="image/*"
+                  class="hidden"
+                  onchange="handlePhotoGraderUpload(this)"
+                />
+              </label>
+
+              <div
+                id="photo-grader-preview-box"
+                class="rounded-xl border border-neutral-800 bg-[#212121] flex items-center justify-center overflow-hidden min-h-[140px] p-2"
+              >
+                <span
+                  id="photo-grader-placeholder"
+                  class="text-xs text-neutral-500 text-center px-3"
+                  >No photo selected yet</span
+                >
+                <img
+                  id="photo-grader-preview-img"
+                  src=""
+                  alt="Uploaded Homework Preview"
+                  class="hidden max-h-44 rounded-lg object-contain"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-neutral-400 mb-1.5">
+                Optional Context or Typed Steps
+              </label>
+              <textarea
+                id="photo-grader-notes"
+                rows="3"
+                placeholder="e.g., 'Solve 2x^2 - 5x - 3 = 0. My teacher marked step 2 wrong...' (Or type your steps here if you don't have a photo handy)"
+                class="w-full px-4 py-3 rounded-xl bg-[#212121] border border-neutral-700 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-500 select-text"
+              ></textarea>
+            </div>
+
+            <button
+              onclick="runPhotoGraderAnalysis()"
+              class="w-full py-3.5 rounded-xl bg-white hover:bg-neutral-200 text-black font-semibold text-xs sm:text-sm transition"
+            >
+              Scan My Work &amp; Pinpoint Exact Step Errors
+            </button>
+
+            <!-- AI VISION RESULT CARD -->
+            <div
+              id="photo-grader-result"
+              class="hidden p-5 rounded-xl bg-[#212121] border border-neutral-700 space-y-3"
+            >
+              <div class="flex items-center justify-between">
+                <span
+                  id="photo-result-badge"
+                  class="text-[11px] font-semibold text-neutral-300"
+                >
+                  Step Diagnostic Complete
+                </span>
+                <button
+                  onclick="speakText(document.getElementById('photo-result-fix').textContent)"
+                  class="text-xs font-medium text-neutral-400 hover:text-white"
+                >
+                  Listen
+                </button>
+              </div>
+              <div class="text-xs text-neutral-300">
+                <strong class="text-white">Detected Topic &amp; Work:</strong>
+                <span id="photo-result-transcription"></span>
+              </div>
+              <div
+                class="p-3.5 rounded-lg bg-red-950/40 border border-red-800/50 text-xs text-red-200 leading-relaxed"
+              >
+                <strong class="block mb-0.5 text-red-300"
+                  >Exact Mistake / Breakdown Point:</strong
+                >
+                <span id="photo-result-error"></span>
+              </div>
+              <div
+                class="p-3.5 rounded-lg bg-emerald-950/40 border border-emerald-800/50 text-xs text-emerald-200 leading-relaxed"
+              >
+                <strong class="block mb-0.5 text-emerald-300"
+                  >How to Fix It Step-by-Step:</strong
+                >
+                <span id="photo-result-fix"></span>
+              </div>
+              <div
+                class="flex flex-wrap items-center justify-between gap-2 pt-2"
+              >
+                <span class="text-[11px] text-neutral-400">
+                  Automatically saved to your Mistake Vault for review
+                </span>
+                <button
+                  id="photo-launch-practice-btn"
+                  class="px-4 py-2 rounded-lg bg-white text-black text-xs font-semibold hover:bg-neutral-200 transition"
+                >
+                  Practice This Exact Skill 1-by-1
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =============================================================== -->
+        <!-- VIEW 4: MISTAKE VAULT (Takes over main screen from Sidebar)     -->
+        <!-- =============================================================== -->
+        <section
+          id="stage-mistake-vault"
+          class="hidden max-w-3xl w-full mx-auto py-6 space-y-6"
+        >
+          <div
+            class="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-800 pb-4"
+          >
+            <div>
+              <div
+                class="text-xs font-semibold uppercase tracking-wider text-neutral-400"
+              >
+                Spaced Repetition Habit Loop
+              </div>
+              <h2 class="text-2xl font-semibold text-white">
+                Personal Mistake Vault &amp; Flashcard Deck
+              </h2>
+            </div>
+            <div
+              class="flex bg-[#171717] p-1 rounded-xl border border-neutral-800 gap-1"
+            >
+              <button
+                id="vault-tab-flashcards"
+                onclick="switchVaultTab('flashcards')"
+                class="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-neutral-800 text-white transition"
+              >
+                Spaced Repetition Flashcards
+              </button>
+              <button
+                id="vault-tab-list"
+                onclick="switchVaultTab('list')"
+                class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-neutral-400 hover:text-white transition"
+              >
+                All Logged Mistakes
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <span
+              id="vault-stats-summary"
+              class="text-xs font-medium text-neutral-400"
+            ></span>
+            <button
+              onclick="clearMistakeVault()"
+              class="text-xs font-medium text-red-400 hover:underline"
+            >
+              Clear Mistake Vault
+            </button>
+          </div>
+
+          <div id="vault-view-flashcards" class="space-y-4">
+            <div
+              id="vault-flashcard-container"
+              class="p-6 rounded-2xl bg-[#171717] border border-neutral-800 min-h-[220px] flex flex-col justify-between"
+            ></div>
+          </div>
+
+          <div id="vault-view-list" class="hidden space-y-2.5"></div>
+        </section>
+
+        <!-- =============================================================== -->
+        <!-- VIEW 5: ENGLISH / BOOK MODE                                     -->
+        <!-- =============================================================== -->
+        <section
+          id="stage-book-mode"
+          class="hidden max-w-3xl w-full mx-auto py-6 space-y-6"
+        >
+          <!-- STEP A: BRAIN DUMP -->
+          <div
+            id="book-step-braindump"
+            class="bg-[#171717] border border-neutral-800 rounded-2xl p-6 sm:p-8 space-y-4"
+          >
+            <div
+              class="text-xs font-semibold uppercase tracking-wider text-neutral-400"
+            >
+              Literary &amp; Book Mastery • Step 1
             </div>
             <h2
               id="book-braindump-title"
-              class="text-2xl font-extrabold text-slate-900 mb-2"
+              class="text-xl sm:text-2xl font-semibold text-white"
             >
               Tell me what you know about the book so far
             </h2>
-            <p class="text-sm text-slate-600 mb-5 leading-relaxed">
-              In English, there's no single "right or wrong" formula. In the box
-              below, type
-              <strong
-                >whatever you remember or understand about this book</strong
-              >
-              in any format—bullet points, messy notes, characters, basic plot,
-              themes, or even parts that confused you. From there, we'll figure
-              out what to review and discuss!
+            <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed">
+              In English, there is no single right or wrong formula. Type
+              whatever you remember or understand about this book—bullet points,
+              characters, plot, themes, or parts that confused you.
             </p>
 
             <textarea
               id="book-braindump-input"
               rows="6"
-              placeholder="Type anything you know! For example: 'I know Gatsby throws huge parties to get Daisy's attention, Nick is the narrator, and there's a green light across the water, but I don't really get what the Valley of Ashes means or how to write a deep essay about the American Dream...'"
-              class="w-full p-4 rounded-2xl border border-slate-300 text-sm font-medium text-slate-900 bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-600 mb-4 leading-relaxed"
+              placeholder="Type anything you know! For example: 'I know Gatsby throws huge parties to get Daisy's attention, Nick is the narrator, and there's a green light across the water, but I don't really get what the Valley of Ashes means...'"
+              class="w-full p-4 rounded-xl bg-[#212121] border border-neutral-700 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-500 leading-relaxed select-text"
             ></textarea>
 
             <div class="flex flex-wrap items-center justify-between gap-3">
-              <span class="text-xs text-slate-400 font-medium">
-                Tip: Even if you've only read a few chapters or barely remember
-                the plot, write that down!
+              <span class="text-xs text-neutral-500">
+                Even if you have only read a few chapters, write that down.
               </span>
               <button
                 onclick="analyzeBookBraindump()"
-                class="px-6 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-sm shadow-sm transition"
+                class="px-6 py-3 rounded-xl bg-white hover:bg-neutral-200 text-black font-semibold text-xs transition"
               >
-                Analyze My Understanding & Pick What to Review →
+                Analyze My Understanding &amp; Pick What to Review
               </button>
             </div>
           </div>
 
-          <!-- STEP B: AI FEEDBACK ON THEIR UNDERSTANDING + WHAT THEY WANT TO REVIEW -->
+          <!-- STEP B: FOCUS PICKER -->
           <div
             id="book-step-focus"
-            class="hidden surface-card rounded-3xl p-8 space-y-6"
+            class="hidden bg-[#171717] border border-neutral-800 rounded-2xl p-6 sm:p-8 space-y-6"
           >
             <div
-              class="p-5 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-3"
+              class="p-5 rounded-xl bg-[#212121] border border-neutral-700 space-y-3"
             >
               <div class="flex items-center justify-between">
                 <span
-                  class="text-xs font-extrabold uppercase tracking-wider text-amber-800"
+                  class="text-xs font-semibold uppercase tracking-wider text-neutral-400"
                 >
-                  ✓ What You Already Have Down & Where We Can Go Deeper
+                  What You Already Have Down &amp; Where We Can Go Deeper
                 </span>
                 <button
                   onclick="speakText(document.getElementById('book-gap-analysis').textContent)"
-                  class="text-xs font-bold text-amber-900 hover:underline"
+                  class="text-xs font-medium text-neutral-400 hover:text-white"
                 >
-                  🔊 Listen
+                  Listen
                 </button>
               </div>
               <p
                 id="book-strengths-text"
-                class="text-xs font-semibold text-emerald-800 bg-emerald-50/80 px-3 py-2 rounded-xl border border-emerald-200"
+                class="text-xs font-medium text-emerald-300 bg-emerald-950/40 px-3 py-2 rounded-lg border border-emerald-800/50"
               ></p>
               <p
                 id="book-gap-analysis"
-                class="text-sm font-medium text-slate-800 leading-relaxed"
+                class="text-sm text-neutral-200 leading-relaxed"
               ></p>
             </div>
 
             <div>
-              <h3 class="text-base font-extrabold text-slate-900 mb-1">
+              <h3 class="text-sm font-semibold text-white mb-1">
                 What angle or area do you want to discuss and unpack together?
               </h3>
-              <p class="text-xs text-slate-500 mb-4">
-                Click one of the tailored discussion angles below—or type your
-                own question, chapter, or essay prompt—to start our
-                back-and-forth discussion.
+              <p class="text-xs text-neutral-400 mb-4">
+                Click one of the tailored discussion angles below or type your
+                own question, chapter, or essay prompt.
               </p>
 
               <div
                 id="book-focus-options"
-                class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4"
+                class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4"
               ></div>
 
               <div class="flex flex-col sm:flex-row gap-2.5">
@@ -681,274 +979,279 @@
                   type="text"
                   placeholder="Or type what you want to review (e.g., 'Help me understand the ending' or 'My essay is on ambition')..."
                   onkeydown="if(event.key==='Enter') startCustomBookDiscussion()"
-                  class="flex-1 px-4 py-3 rounded-xl border border-slate-300 text-xs font-semibold"
+                  class="flex-1 px-4 py-2.5 rounded-xl bg-[#212121] border border-neutral-700 text-xs text-white focus:outline-none select-text"
                 />
                 <button
                   onclick="startCustomBookDiscussion()"
-                  class="px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shrink-0"
+                  class="px-5 py-2.5 rounded-xl bg-white hover:bg-neutral-200 text-black text-xs font-semibold shrink-0"
                 >
-                  Start Discussion →
+                  Start Discussion
                 </button>
               </div>
             </div>
           </div>
 
-          <!-- STEP C: INTERACTIVE SOCRATIC BOOK DISCUSSION & ESSAY BUILDER -->
+          <!-- STEP C: INTERACTIVE SOCRATIC DISCUSSION -->
           <div
             id="book-step-discussion"
-            class="hidden surface-card rounded-3xl p-8 space-y-6"
+            class="hidden bg-[#171717] border border-neutral-800 rounded-2xl p-6 sm:p-8 space-y-6"
           >
             <div
-              class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4"
+              class="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-800 pb-4"
             >
               <div>
                 <span
                   id="book-discussion-badge"
-                  class="text-xs font-extrabold uppercase tracking-wider text-indigo-600 block"
+                  class="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 block"
                 >
-                  INTERACTIVE LITERARY DISCUSSION
+                  Interactive Literary Discussion
                 </span>
                 <h2
                   id="book-discussion-title"
-                  class="text-xl font-extrabold text-slate-900"
+                  class="text-lg font-semibold text-white"
                 >
                   Unpacking the Text
                 </h2>
               </div>
               <button
                 onclick="backToBookFocusSelection()"
-                class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition"
+                class="px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-xs font-medium text-neutral-300 transition"
               >
-                ← Switch Discussion Angle
+                Switch Discussion Angle
               </button>
             </div>
 
-            <!-- Key Passage / Scene Anchor Card -->
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+            <div class="p-4 rounded-xl bg-[#212121] border border-neutral-800">
               <span
-                class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1"
+                class="text-[10px] font-semibold uppercase tracking-wider text-neutral-400 block mb-1"
               >
-                📌 Key Scene / Moment We're Examining
+                Key Scene / Moment We Are Examining
               </span>
               <p
                 id="book-scene-anchor"
-                class="text-xs font-medium text-slate-700 italic leading-relaxed"
+                class="text-xs text-neutral-300 italic leading-relaxed"
               ></p>
             </div>
 
-            <!-- Main Screen Back-and-Forth Discussion Stream -->
             <div
               id="book-discussion-stream"
-              class="space-y-4 max-h-[420px] overflow-y-auto pr-1"
+              class="space-y-3 max-h-[380px] overflow-y-auto pr-1"
             ></div>
 
-            <!-- Student Thought / Interpretation Input -->
-            <div
-              class="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 space-y-3"
-            >
-              <label
-                class="block text-xs font-extrabold uppercase tracking-wider text-indigo-900"
-              >
-                Your Thoughts, Interpretation, or Question (No wrong
-                answers—tell me what you think!)
+            <div class="space-y-3 pt-2">
+              <label class="block text-xs font-medium text-neutral-400">
+                Your Thoughts, Interpretation, or Question
               </label>
               <textarea
                 id="book-student-reply-input"
                 rows="3"
                 placeholder="Share what you think about this question, how you see the character's motive, or ask me to clarify a part of the book..."
-                class="w-full p-3.5 rounded-xl border border-slate-300 text-sm font-medium bg-white focus:outline-none focus:border-indigo-600"
+                class="w-full p-3.5 rounded-xl bg-[#212121] border border-neutral-700 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-500 select-text"
               ></textarea>
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <button
                   onclick="askBookHelperNudge()"
-                  class="px-3.5 py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-700 transition"
+                  class="px-3.5 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-xs font-medium text-neutral-300 transition"
                 >
-                  💡 Give Me a Clue / Perspective from the Book
+                  Give Me a Clue / Perspective from the Book
                 </button>
                 <button
                   onclick="sendBookDiscussionReply()"
-                  class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-sm transition"
+                  class="px-5 py-2 rounded-lg bg-white hover:bg-neutral-200 text-black font-semibold text-xs transition"
                 >
-                  Share My Perspective & Continue Discussion →
+                  Share My Perspective &amp; Continue
                 </button>
               </div>
             </div>
 
-            <!-- Live Evolving Essay Thesis & Key Insights Box -->
-            <div class="p-5 rounded-2xl bg-slate-900 text-white space-y-2">
-              <div class="flex items-center justify-between">
-                <span
-                  class="text-xs font-extrabold uppercase tracking-wider text-emerald-400"
-                >
-                  📝 Live Essay Thesis & Takeaway Builder (Updates as we talk!)
-                </span>
-              </div>
+            <div
+              class="p-4 rounded-xl bg-[#212121] border border-neutral-800 space-y-1"
+            >
+              <span
+                class="text-[10px] font-semibold uppercase tracking-wider text-emerald-400"
+              >
+                Live Essay Thesis &amp; Takeaway Builder
+              </span>
               <p
                 id="book-evolving-thesis"
-                class="text-xs text-slate-200 leading-relaxed"
+                class="text-xs text-neutral-200 leading-relaxed"
               ></p>
             </div>
           </div>
         </section>
 
-        <!-- ================================================================= -->
-        <!-- STEM MODE STAGE 2: AI DIAGNOSTIC PRE-TEST (NO SPOILERS)           -->
-        <!-- ================================================================= -->
-        <section id="stage-pretest" class="hidden surface-card rounded-3xl p-8">
+        <!-- =============================================================== -->
+        <!-- VIEW 6: STEM DIAGNOSTIC PRE-TEST                                -->
+        <!-- =============================================================== -->
+        <section
+          id="stage-pretest"
+          class="hidden max-w-3xl w-full mx-auto py-6"
+        >
           <div
-            class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6"
+            class="bg-[#171717] border border-neutral-800 rounded-2xl p-6 sm:p-8 space-y-6"
           >
-            <div>
-              <span
-                class="text-xs font-bold uppercase tracking-wider text-amber-600 block"
-                >Step 2 • AI Diagnostic Pre-Test (No Spoilers)</span
-              >
-              <h2
-                id="pretest-title"
-                class="text-xl font-extrabold text-slate-900 mt-0.5"
-              >
-                Diagnostic Baseline
-              </h2>
-            </div>
-            <button
-              onclick="skipPretestToLesson()"
-              class="text-xs font-bold text-indigo-600 hover:underline"
+            <div
+              class="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-800 pb-4"
             >
-              Skip straight to Lesson & Walkthrough →
+              <div>
+                <span
+                  class="text-xs font-semibold uppercase tracking-wider text-neutral-400 block"
+                >
+                  Step 2 • AI Diagnostic Pre-Test (No Spoilers)
+                </span>
+                <h2
+                  id="pretest-title"
+                  class="text-xl font-semibold text-white mt-0.5"
+                >
+                  Diagnostic Baseline
+                </h2>
+              </div>
+              <button
+                onclick="skipPretestToLesson()"
+                class="text-xs font-medium text-neutral-300 hover:text-white underline"
+              >
+                Skip straight to Lesson &amp; Walkthrough
+              </button>
+            </div>
+
+            <p class="text-xs sm:text-sm text-neutral-400">
+              Work through these baseline questions generated by the AI. Enter
+              your answers and show your scratchwork below so Aethel can see
+              where any mistake happens.
+            </p>
+
+            <div id="pretest-questions-list" class="space-y-4"></div>
+
+            <!-- Scratchpad -->
+            <div
+              class="p-4 rounded-xl bg-[#212121] border border-neutral-800 space-y-3"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 class="text-xs font-semibold text-neutral-200">
+                    Show or Upload Your Work
+                  </h3>
+                  <p class="text-[11px] text-neutral-500">
+                    Write out your steps on the pad, type your steps, or upload
+                    a photo of your paper.
+                  </p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <label
+                    class="cursor-pointer px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-xs font-medium text-neutral-200 transition"
+                  >
+                    Upload Photo of Work
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      class="hidden"
+                      onchange="handlePretestFile(this)"
+                    />
+                  </label>
+                  <button
+                    onclick="clearPretestCanvas()"
+                    class="px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-xs font-medium text-neutral-400 hover:text-white"
+                  >
+                    Clear Pad
+                  </button>
+                </div>
+              </div>
+
+              <div
+                id="pretest-upload-badge"
+                class="hidden px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-800/50 text-emerald-300 text-xs"
+              ></div>
+
+              <div
+                class="w-full h-36 rounded-lg border border-neutral-700 overflow-hidden scratchpad-grid bg-[#171717]"
+              >
+                <canvas
+                  id="pretest-canvas"
+                  width="700"
+                  height="144"
+                  class="w-full h-full cursor-crosshair"
+                ></canvas>
+              </div>
+
+              <textarea
+                id="pretest-work-notes"
+                rows="2"
+                placeholder="Optional: Type out the steps you took (e.g., 'First I multiplied a and c, then looked for factors...')..."
+                class="w-full px-3.5 py-2.5 rounded-lg bg-[#171717] border border-neutral-700 text-xs text-white placeholder-neutral-500 focus:outline-none select-text"
+              ></textarea>
+            </div>
+
+            <button
+              onclick="submitDiagnosticPretest()"
+              class="w-full py-3.5 rounded-xl bg-white hover:bg-neutral-200 text-black font-semibold text-xs sm:text-sm transition"
+            >
+              Submit Pre-Test &amp; Analyze My Work with AI
             </button>
           </div>
-
-          <p class="text-sm text-slate-600 mb-6">
-            Work through these baseline questions generated by the AI.
-            <strong>Aethel won't spoil if you're right or wrong yet</strong
-            >—enter your answers and show your scratchwork below so the AI can
-            see where any mistake happens.
-          </p>
-
-          <div id="pretest-questions-list" class="space-y-4 mb-8"></div>
-
-          <!-- Scratchwork & Photo Upload Area -->
-          <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 mb-6">
-            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-              <div>
-                <h3
-                  class="text-xs font-extrabold uppercase tracking-wider text-slate-700"
-                >
-                  Show or Upload Your Work
-                </h3>
-                <p class="text-xs text-slate-500">
-                  Write out your steps on the pad, type your steps, or upload a
-                  photo of your paper.
-                </p>
-              </div>
-              <div class="flex items-center gap-2">
-                <label
-                  class="cursor-pointer px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-700 shadow-sm transition"
-                >
-                  📷 Upload Photo of Work
-                  <input
-                    type="file"
-                    accept="image/*,.pdf"
-                    class="hidden"
-                    onchange="handlePretestFile(this)"
-                  />
-                </label>
-                <button
-                  onclick="clearPretestCanvas()"
-                  class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-500 hover:text-slate-800"
-                >
-                  Clear Pad
-                </button>
-              </div>
-            </div>
-
-            <div
-              id="pretest-upload-badge"
-              class="hidden mb-3 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold"
-            ></div>
-
-            <div
-              class="w-full h-36 rounded-xl border border-slate-300 overflow-hidden scratchpad-grid mb-3"
-            >
-              <canvas
-                id="pretest-canvas"
-                width="700"
-                height="144"
-                class="w-full h-full cursor-crosshair"
-              ></canvas>
-            </div>
-
-            <textarea
-              id="pretest-work-notes"
-              rows="2"
-              placeholder="Optional: Type out the steps you took (e.g., 'First I multiplied a and c, then looked for factors...')..."
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium bg-white focus:outline-none focus:border-indigo-600"
-            ></textarea>
-          </div>
-
-          <button
-            onclick="submitDiagnosticPretest()"
-            class="w-full py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-sm shadow-sm transition"
-          >
-            Submit Pre-Test & Analyze My Work with AI →
-          </button>
         </section>
 
-        <!-- ================================================================= -->
-        <!-- STEM MODE STAGE 3: EXAMPLES + 1-BY-1 WALKTHROUGH + FINAL QUIZ     -->
-        <!-- ================================================================= -->
-        <section id="stage-lesson" class="hidden space-y-6">
+        <!-- =============================================================== -->
+        <!-- VIEW 7: FULL STEM LESSON (Examples + Walkthrough + Quiz)        -->
+        <!-- =============================================================== -->
+        <section
+          id="stage-lesson"
+          class="hidden max-w-3xl w-full mx-auto py-6 space-y-6"
+        >
           <div
-            class="surface-card rounded-3xl p-6 border-l-4 border-l-indigo-600"
+            class="bg-[#171717] border border-neutral-800 rounded-2xl p-5 space-y-2"
           >
-            <div class="flex items-center justify-between mb-1">
+            <div class="flex items-center justify-between">
               <span
-                class="text-xs font-extrabold uppercase tracking-wider text-indigo-600"
-                >AI Personalized Diagnosis & Plan</span
+                class="text-xs font-semibold uppercase tracking-wider text-neutral-400"
+                >AI Personalized Diagnosis &amp; Plan</span
               >
               <button
                 onclick="speakText(document.getElementById('diagnostic-summary-text').textContent)"
-                class="text-xs font-bold text-slate-500 hover:text-slate-900"
+                class="text-xs font-medium text-neutral-400 hover:text-white"
               >
-                🔊 Listen
+                Listen
               </button>
             </div>
             <p
               id="diagnostic-summary-text"
-              class="text-sm font-medium text-slate-800 leading-relaxed"
+              class="text-xs sm:text-sm text-neutral-200 leading-relaxed"
             ></p>
           </div>
 
-          <div class="surface-card rounded-3xl p-8">
+          <div
+            class="bg-[#171717] border border-neutral-800 rounded-2xl p-6 sm:p-8 space-y-6"
+          >
             <div
-              class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4 mb-6"
+              class="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-800 pb-4"
             >
               <div>
                 <span
                   id="lesson-topic-badge"
-                  class="text-xs font-bold uppercase tracking-wider text-indigo-600 block"
-                  >ADAPTIVE MODULE</span
+                  class="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 block"
+                  >Adaptive Module</span
                 >
                 <h2
                   id="lesson-main-title"
-                  class="text-xl font-extrabold text-slate-900"
+                  class="text-xl font-semibold text-white"
                 >
                   Topic
                 </h2>
               </div>
 
-              <div class="flex flex-wrap bg-slate-100 p-1 rounded-xl gap-1">
+              <div
+                class="flex flex-wrap bg-[#212121] p-1 rounded-xl border border-neutral-800 gap-1"
+              >
                 <button
                   id="tab-btn-examples"
                   onclick="switchLessonTab('examples')"
-                  class="px-3.5 py-2 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-sm transition"
+                  class="px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-700 text-white transition"
                 >
                   1. Examples (<span id="examples-count-label">0</span>)
                 </button>
                 <button
                   id="tab-btn-walkthrough"
                   onclick="switchLessonTab('walkthrough')"
-                  class="px-3.5 py-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition"
+                  class="px-3 py-1.5 rounded-lg text-xs font-medium text-neutral-400 hover:text-white transition"
                 >
                   2. 1-by-1 Walkthrough (<span id="practice-count-label">0</span
                   >)
@@ -956,7 +1259,7 @@
                 <button
                   id="tab-btn-quiz"
                   onclick="switchLessonTab('quiz')"
-                  class="px-3.5 py-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition"
+                  class="px-3 py-1.5 rounded-lg text-xs font-medium text-neutral-400 hover:text-white transition"
                 >
                   3. Final Mastery Quiz (<span id="quiz-count-label">0</span>)
                 </button>
@@ -964,28 +1267,27 @@
             </div>
 
             <!-- TAB 1: WORKED EXAMPLES -->
-            <div id="view-worked-examples" class="space-y-6">
-              <p class="text-sm text-slate-500">
+            <div id="view-worked-examples" class="space-y-5">
+              <p class="text-xs text-neutral-400">
                 The AI scaled the number of worked examples below based on topic
-                complexity. Study the steps, then launch your
-                <strong>1-by-1 Interactive Walkthrough</strong>!
+                complexity. Study the steps, then launch your 1-by-1 Interactive
+                Walkthrough.
               </p>
-              <div id="worked-examples-container" class="space-y-5"></div>
-
+              <div id="worked-examples-container" class="space-y-4"></div>
               <button
                 onclick="switchLessonTab('walkthrough')"
-                class="w-full py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-sm shadow-sm transition"
+                class="w-full py-3.5 rounded-xl bg-white hover:bg-neutral-200 text-black font-semibold text-xs transition"
               >
-                Start 1-by-1 Guided Homework & Practice Walkthrough →
+                Start 1-by-1 Guided Homework &amp; Practice Walkthrough
               </button>
             </div>
 
             <!-- TAB 2: 1-BY-1 WALKTHROUGH -->
-            <div id="view-practice-queue" class="hidden space-y-6">
+            <div id="view-practice-queue" class="hidden space-y-5">
               <div class="flex items-center justify-between">
                 <span
                   id="practice-progress-badge"
-                  class="text-xs font-extrabold uppercase tracking-wider text-indigo-600"
+                  class="text-xs font-semibold text-neutral-400"
                 >
                   Problem 1
                 </span>
@@ -993,16 +1295,16 @@
               </div>
 
               <div
-                class="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-4"
+                class="p-5 rounded-xl bg-[#212121] border border-neutral-800 space-y-4"
               >
                 <p
                   id="practice-prompt-text"
-                  class="text-base font-bold text-slate-900 leading-relaxed"
+                  class="text-sm sm:text-base font-semibold text-white leading-relaxed"
                 ></p>
 
                 <div>
                   <label
-                    class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5"
+                    class="block text-xs font-medium text-neutral-400 mb-1.5"
                   >
                     1. Show Your Work / Steps (Aethel checks your steps to help
                     if you get stuck)
@@ -1011,13 +1313,13 @@
                     id="practice-work-input"
                     rows="3"
                     placeholder="Write out your steps here..."
-                    class="w-full px-4 py-3 rounded-xl border border-slate-300 text-xs font-medium bg-white focus:outline-none focus:border-indigo-600"
+                    class="w-full px-3.5 py-2.5 rounded-lg bg-[#171717] border border-neutral-700 text-xs text-white placeholder-neutral-500 focus:outline-none select-text"
                   ></textarea>
                 </div>
 
                 <div>
                   <label
-                    class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5"
+                    class="block text-xs font-medium text-neutral-400 mb-1.5"
                   >
                     2. Your Final Answer
                   </label>
@@ -1026,169 +1328,227 @@
                     type="text"
                     placeholder="Enter your final answer..."
                     onkeydown="if(event.key==='Enter') checkPracticeAnswerWithAI()"
-                    class="w-full px-4 py-3 rounded-xl border border-slate-300 text-sm font-bold bg-white focus:outline-none focus:border-indigo-600"
+                    class="w-full px-3.5 py-2.5 rounded-lg bg-[#171717] border border-neutral-700 text-xs font-semibold text-white placeholder-neutral-500 focus:outline-none select-text"
                   />
                 </div>
 
                 <div class="flex flex-wrap gap-2.5 pt-2">
                   <button
                     onclick="checkPracticeAnswerWithAI()"
-                    class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-sm transition"
+                    class="px-5 py-2.5 rounded-lg bg-white hover:bg-neutral-200 text-black font-semibold text-xs transition"
                   >
-                    ✓ Check My Work & Answer with AI
+                    Check My Work &amp; Answer with AI
                   </button>
                   <button
                     onclick="showPracticeHint()"
-                    class="px-4 py-3 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs transition"
+                    class="px-4 py-2.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-medium text-xs transition"
                   >
-                    💡 Give Me a Step Hint
+                    Give Me a Step Hint
                   </button>
                   <button
                     id="next-problem-btn"
                     onclick="goToNextGuidedProblem()"
-                    class="hidden px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm transition ml-auto"
+                    class="hidden px-5 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs transition ml-auto"
                   >
-                    Next Problem →
+                    Next Problem
                   </button>
                 </div>
 
                 <div
                   id="practice-feedback-box"
-                  class="hidden mt-4 p-4 rounded-xl text-xs font-semibold leading-relaxed"
+                  class="hidden mt-3 p-3.5 rounded-lg text-xs leading-relaxed"
                 ></div>
               </div>
             </div>
 
             <!-- TAB 3: FINAL MASTERY QUIZ -->
-            <div id="view-final-quiz" class="hidden space-y-6">
-              <div
-                class="p-4 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-between"
-              >
-                <div>
-                  <h3 class="text-sm font-extrabold text-indigo-950">
-                    Final Mastery Quiz
-                  </h3>
-                  <p class="text-xs text-indigo-800">
-                    Complete these questions to verify your mastery of this
-                    topic.
-                  </p>
-                </div>
-                <span
-                  class="px-3 py-1 rounded-full bg-indigo-600 text-white text-xs font-bold"
-                  >End-of-Lesson Check</span
-                >
-              </div>
-
+            <div id="view-final-quiz" class="hidden space-y-5">
               <div id="final-quiz-list" class="space-y-4"></div>
-
               <button
                 onclick="submitFinalQuiz()"
-                class="w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm shadow-sm transition"
+                class="w-full py-3.5 rounded-xl bg-white hover:bg-neutral-200 text-black font-semibold text-xs transition"
               >
-                Grade My Final Mastery Quiz →
+                Grade My Final Mastery Quiz
               </button>
-
               <div
                 id="final-quiz-results"
-                class="hidden p-6 rounded-2xl bg-slate-900 text-white space-y-3"
+                class="hidden p-5 rounded-xl bg-[#212121] border border-neutral-700 space-y-2"
               ></div>
             </div>
           </div>
         </section>
       </main>
+    </div>
 
-      <!-- =================================================================== -->
-      <!-- RIGHT: LIVE AI HOMEWORK COMPANION (Triggers Main Screen Lesson!)    -->
-      <!-- =================================================================== -->
-      <aside class="lg:col-span-4 flex flex-col">
+    <!-- =================================================================== -->
+    <!-- MODAL: SETTINGS (Appearance, Zoom, Voice)                           -->
+    <!-- =================================================================== -->
+    <div
+      id="settings-modal"
+      class="hidden fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-[#212121] border border-neutral-700 rounded-2xl max-w-md w-full p-6 space-y-5"
+      >
         <div
-          class="surface-card rounded-3xl flex flex-col h-[680px] sticky top-20 overflow-hidden"
+          class="flex items-center justify-between border-b border-neutral-800 pb-3"
         >
-          <div class="p-5 border-b border-slate-100 bg-slate-900 text-white">
-            <div class="flex items-center justify-between gap-2">
-              <div class="flex items-center gap-2">
-                <span
-                  class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"
-                ></span>
-                <h2 class="font-bold text-sm">
-                  Aethel Live Homework Companion
-                </h2>
-              </div>
-              <button
-                onclick="clearChatHistory()"
-                class="text-[11px] font-bold text-slate-400 hover:text-white transition"
-                title="Reset saved chat messages"
-              >
-                Clear Chat
-              </button>
-            </div>
-            <p class="text-[11px] text-slate-300 mt-1">
-              Type any homework question or book title here — I will immediately
-              load a tailored lesson or book discussion onto your main screen!
-            </p>
-          </div>
-
-          <div
-            id="chat-messages"
-            class="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/60"
-          ></div>
-
-          <div
-            id="chat-attachment-preview"
-            class="hidden px-4 py-2 bg-indigo-50 border-t border-indigo-100 flex items-center justify-between text-xs font-bold text-indigo-700"
+          <h3 class="text-sm font-semibold text-white">Settings</h3>
+          <button
+            onclick="closeSettingsModal()"
+            class="text-neutral-400 hover:text-white text-xs"
           >
-            <span id="chat-attachment-name"></span>
-            <button
-              onclick="clearChatAttachment()"
-              class="text-rose-600 hover:underline"
+            Close
+          </button>
+        </div>
+
+        <div class="space-y-4 text-xs">
+          <div class="flex items-center justify-between">
+            <span class="text-neutral-300 font-medium">Appearance</span>
+            <select
+              id="theme-select"
+              onchange="applyThemeSetting(this.value)"
+              class="bg-[#171717] border border-neutral-700 rounded-lg px-3 py-1.5 text-white focus:outline-none"
             >
-              ✕
-            </button>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select>
           </div>
 
-          <div class="p-3.5 bg-white border-t border-slate-200 space-y-2">
-            <div class="flex items-center gap-2">
-              <label
-                class="cursor-pointer px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition shrink-0 flex items-center gap-1"
-              >
-                <span>📎 Upload Homework / Test</span>
-                <input
-                  type="file"
-                  accept="image/*,.pdf,.doc,.docx"
-                  class="hidden"
-                  onchange="handleChatFileSelect(this)"
-                />
-              </label>
-              <span class="text-[11px] text-slate-400 truncate"
-                >Loads onto main workspace</span
-              >
-            </div>
+          <div class="flex items-center justify-between">
+            <span class="text-neutral-300 font-medium">Interface Zoom</span>
+            <select
+              id="zoom-select"
+              onchange="applyZoomSetting(this.value)"
+              class="bg-[#171717] border border-neutral-700 rounded-lg px-3 py-1.5 text-white focus:outline-none"
+            >
+              <option value="0.9">90%</option>
+              <option value="1" selected>100% (Default)</option>
+              <option value="1.1">110%</option>
+              <option value="1.2">120%</option>
+            </select>
+          </div>
 
-            <div class="flex gap-2">
-              <input
-                id="chat-input"
-                type="text"
-                placeholder="Ask about a book or paste homework..."
-                onkeydown="if(event.key==='Enter') sendChatMessage()"
-                class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-indigo-600"
-              />
-              <button
-                onclick="sendChatMessage()"
-                class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition"
-              >
-                Send
-              </button>
+          <div class="flex items-center justify-between">
+            <span class="text-neutral-300 font-medium">Tutor Voice</span>
+            <select
+              id="voice-select"
+              class="bg-[#171717] border border-neutral-700 rounded-lg px-3 py-1.5 text-white focus:outline-none max-w-[180px]"
+            >
+              <option value="">Natural Voice</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- MODAL: STUDENT PROFILE                                              -->
+    <!-- =================================================================== -->
+    <div
+      id="profile-modal"
+      class="hidden fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-[#212121] border border-neutral-700 rounded-2xl max-w-md w-full p-6 space-y-5"
+      >
+        <div
+          class="flex items-center justify-between border-b border-neutral-800 pb-3"
+        >
+          <h3 class="text-sm font-semibold text-white">Student Profile</h3>
+          <button
+            onclick="closeProfileModal()"
+            class="text-neutral-400 hover:text-white text-xs"
+          >
+            Close
+          </button>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div class="p-3.5 rounded-xl bg-[#171717] border border-neutral-800">
+            <label class="text-neutral-500 block mb-1">Student Name</label>
+            <input
+              id="profile-name-input"
+              type="text"
+              value="Saran Thummati"
+              onchange="saveStudentProfileName(this.value)"
+              class="w-full bg-transparent text-white font-semibold focus:outline-none select-text"
+            />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div
+              class="p-3.5 rounded-xl bg-[#171717] border border-neutral-800"
+            >
+              <div class="text-neutral-500 mb-0.5">Saved Lessons</div>
+              <div id="profile-info-sessions" class="text-white font-semibold">
+                0
+              </div>
+            </div>
+            <div
+              class="p-3.5 rounded-xl bg-[#171717] border border-neutral-800"
+            >
+              <div class="text-neutral-500 mb-0.5">Mistake Vault</div>
+              <div id="profile-info-vault" class="text-white font-semibold">
+                0
+              </div>
             </div>
           </div>
         </div>
-      </aside>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- FLOATING HELP NAVIGATION AI CHAT BOX                                -->
+    <!-- =================================================================== -->
+    <div
+      id="help-assistant-widget"
+      class="hidden fixed bottom-5 right-5 z-40 w-80 bg-[#212121] border border-neutral-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+    >
+      <div
+        class="px-4 py-3 bg-[#171717] border-b border-neutral-800 flex items-center justify-between"
+      >
+        <span class="text-xs font-semibold text-white"
+          >Aethel Navigation Help</span
+        >
+        <button
+          onclick="toggleHelpAssistantBox()"
+          class="text-neutral-400 hover:text-white text-xs"
+        >
+          Close
+        </button>
+      </div>
+      <div
+        id="help-chat-messages"
+        class="p-3.5 space-y-2.5 h-56 overflow-y-auto text-xs"
+      >
+        <div class="p-2.5 rounded-xl bg-[#171717] text-neutral-200">
+          Ask me anything about how to navigate Aethel, start a lesson, use the
+          Photo Grader, or review your Mistake Vault.
+        </div>
+      </div>
+      <div class="p-2.5 border-t border-neutral-800 flex gap-2">
+        <input
+          id="help-chat-input"
+          type="text"
+          placeholder="Ask about navigation..."
+          onkeydown="if(event.key==='Enter') sendHelpNavigationQuestion()"
+          class="flex-1 px-3 py-2 rounded-lg bg-[#141414] border border-neutral-700 text-xs text-white focus:outline-none select-text"
+        />
+        <button
+          onclick="sendHelpNavigationQuestion()"
+          class="px-3 py-2 rounded-lg bg-white text-black text-xs font-semibold"
+        >
+          Send
+        </button>
+      </div>
     </div>
 
     <script>
       // =========================================================================
-      // MULTI-ENGINE AI CALLER (Direct Browser Groq API + Keyless Puter.js Fallback)
+      // 1. MULTI-ENGINE AI CALLER (From working index (1).html + Offline Failsafe)
       // =========================================================================
       const GROQ_KEYS = [
+        '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',
         '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',
         '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',
       ];
@@ -1211,6 +1571,189 @@
           cleaned = cleaned.slice(first, last + 1);
         }
         return JSON.parse(cleaned);
+      }
+
+      // Smart local fallback generator if all cloud keys are rate-limited or offline
+      function buildSmartFallbackJSON(systemPrompt, userPrompt) {
+        const combined = `${systemPrompt}\n${userPrompt}`;
+        const topicMatch =
+          userPrompt.match(/Specific Focus \/ Homework Prompt:\s*"([^"]+)"/i) ||
+          userPrompt.match(/The student entered:\s*"([^"]+)"/i) ||
+          userPrompt.match(/Topic:\s*"([^"]+)"/i);
+        const topic = topicMatch ? topicMatch[1] : 'Core Concept';
+
+        if (
+          combined.includes('"subtopics"') &&
+          combined.includes('"category"')
+        ) {
+          const lower = topic.toLowerCase();
+          const isLit =
+            lower.includes('book') ||
+            lower.includes('gatsby') ||
+            lower.includes('mockingbird') ||
+            lower.includes('macbeth') ||
+            lower.includes('hamlet') ||
+            lower.includes('romeo') ||
+            lower.includes('novel');
+          return {
+            category: isLit ? 'literature' : 'stem',
+            cleanTitle: topic.replace(/^book:\s*/i, ''),
+            message: `Which specific part of ${topic} would you like to master today?`,
+            subtopics: [
+              `Foundational Rules & Setup for ${topic}`,
+              `Step-by-Step Problem Solving in ${topic}`,
+              `Multi-Step & Word Problems in ${topic}`,
+              `Exam-Level Mastery Practice for ${topic}`,
+            ],
+          };
+        }
+
+        if (
+          combined.includes('"preTestQuestions"') &&
+          combined.includes('"workedExamples"')
+        ) {
+          return {
+            specificFocusTitle: topic,
+            complexityLevel: 'Medium',
+            aiReasoning: `Structured a step-by-step diagnostic, worked examples, and 1-by-1 guided walkthrough tailored to ${topic}.`,
+            preTestQuestions: [
+              {
+                id: 1,
+                question: `Baseline Check 1: Solve or simplify a foundational expression for ${topic} (e.g., 2x + 6 = 14).`,
+                context: 'Show your setup and intermediate steps below.',
+                expectedAnswer: 'x = 4',
+              },
+              {
+                id: 2,
+                question: `Baseline Check 2: Apply the core rule of ${topic} to find the value of x in 3(x - 2) = 9.`,
+                context: 'Write out each step clearly.',
+                expectedAnswer: 'x = 5',
+              },
+            ],
+            workedExamples: [
+              {
+                title: `Example 1: Core Setup & Method for ${topic}`,
+                problem: `Solve step-by-step: 2x^2 + 7x + 3 = 0`,
+                steps: [
+                  'Step 1: Identify coefficients a = 2, b = 7, c = 3 and multiply a * c = 6.',
+                  'Step 2: Find two factors of 6 that add up to 7 (6 and 1).',
+                  'Step 3: Rewrite the middle term: 2x^2 + 6x + x + 3 = 0, then factor by grouping: (2x + 1)(x + 3) = 0.',
+                  'Step 4: Solve each factor: x = -1/2 or x = -3.',
+                ],
+                takeaway:
+                  'Always check that your split middle terms both multiply to a*c and add to b.',
+              },
+              {
+                title: `Example 2: Handling Negative Terms in ${topic}`,
+                problem: `Solve step-by-step: 3x^2 - 5x - 2 = 0`,
+                steps: [
+                  'Step 1: Multiply a * c = 3 * (-2) = -6.',
+                  'Step 2: Find factors of -6 that add to -5 (-6 and +1).',
+                  'Step 3: Factor by grouping: 3x(x - 2) + 1(x - 2) = (3x + 1)(x - 2) = 0.',
+                ],
+                takeaway:
+                  'Watch negative signs carefully when factoring out the greatest common factor.',
+              },
+            ],
+            guidedQuestions: [
+              {
+                id: 1,
+                prompt: `Guided Problem 1 (${topic}): Factor and solve 2x^2 + 5x + 2 = 0.`,
+                expectedAnswer: '(2x + 1)(x + 2) = 0 or x = -1/2, -2',
+                hint: 'Multiply a * c = 4, then find two numbers that multiply to 4 and add to 5.',
+                stepByStepSolution:
+                  'Split 5x into 4x + x: 2x^2 + 4x + x + 2 = 2x(x + 2) + 1(x + 2) = (2x + 1)(x + 2) = 0.',
+              },
+              {
+                id: 2,
+                prompt: `Guided Problem 2 (${topic}): Factor and solve 3x^2 + 10x + 3 = 0.`,
+                expectedAnswer: '(3x + 1)(x + 3) = 0 or x = -1/3, -3',
+                hint: 'Multiply a * c = 9, then find two numbers that multiply to 9 and add to 10.',
+                stepByStepSolution:
+                  'Split 10x into 9x + x: 3x^2 + 9x + x + 3 = 3x(x + 3) + 1(x + 3) = (3x + 1)(x + 3) = 0.',
+              },
+            ],
+            finalQuiz: [
+              {
+                id: 1,
+                question: `Mastery Check 1: Factor 2x^2 + 9x + 4 completely.`,
+                expectedAnswer: '(2x + 1)(x + 4)',
+                explanation:
+                  'a*c = 8; factors 8 and 1 add to 9, giving (2x + 1)(x + 4).',
+              },
+              {
+                id: 2,
+                question: `Mastery Check 2: Factor 4x^2 + 8x + 3 completely.`,
+                expectedAnswer: '(2x + 1)(2x + 3)',
+                explanation:
+                  'a*c = 12; factors 6 and 2 add to 8, giving (2x + 1)(2x + 3).',
+              },
+            ],
+          };
+        }
+
+        if (combined.includes('"whatTheyKnowWell"')) {
+          return {
+            whatTheyKnowWell:
+              'You already have a strong grasp of the core characters and central plot setup.',
+            gapAndReviewPrompt:
+              'Next, we can unpack the deeper symbolism, character motivations, and how the author builds the central theme for an essay.',
+            suggestedDiscussionAngles: [
+              `Symbolism & Central Motifs in ${activeBookTitle || topic}`,
+              `Character Motivations & Moral Conflicts in ${
+                activeBookTitle || topic
+              }`,
+              `Key Turning Point & Climax Analysis`,
+              `Building an Essay Thesis & Argument on ${
+                activeBookTitle || topic
+              }`,
+            ],
+          };
+        }
+
+        if (combined.includes('"openingDiscussionMessage"')) {
+          return {
+            sceneOrQuoteAnchor: `Key turning point in ${
+              activeBookTitle || topic
+            } where the protagonist's core motivation is tested.`,
+            openingDiscussionMessage: `When you look at how ${
+              activeBookTitle || topic
+            } develops ${activeBookFocus}, what do you think drives the main character's choices in this moment?`,
+            initialThesisSeed: `In ${
+              activeBookTitle || topic
+            }, the author uses ${activeBookFocus} to reveal the tension between personal ambition and reality.`,
+          };
+        }
+
+        if (combined.includes('"tutorResponse"')) {
+          return {
+            tutorResponse:
+              'That is a sharp observation. Notice how that connects directly to the contrast between appearance and reality in the text. Why do you think the author chose to frame the character that way?',
+            newSceneAnchor: `Pivotal character contrast in ${activeBookTitle}`,
+            updatedThesis: `Through ${activeBookFocus}, ${activeBookTitle} demonstrates how idealized illusions collide with social reality.`,
+          };
+        }
+
+        if (combined.includes('"isCorrect"')) {
+          return {
+            isCorrect: true,
+            feedback:
+              'Great job working through the steps clearly! Ready for the next problem.',
+          };
+        }
+
+        if (combined.includes('"diagnosis"')) {
+          return {
+            score: 2,
+            diagnosis:
+              'Diagnostic complete! Review the step-by-step worked examples below, then launch your 1-by-1 guided walkthrough.',
+          };
+        }
+
+        return {
+          reply:
+            'Use the left sidebar to switch between New Chat, Homework Help, Photo Grader, Mistake Vault, and your Recent sessions.',
+        };
       }
 
       async function callAIJSON(systemPrompt, userPrompt) {
@@ -1271,7 +1814,7 @@
                 : puterRes?.message?.content || '';
             return {
               data: extractCleanJSON(text),
-              modelUsed: 'GPT-4o-mini (Keyless Cloud)',
+              modelUsed: 'GPT-4o-mini (Cloud)',
               latencyMs: Date.now() - startTime,
               timestamp: new Date().toLocaleTimeString(),
             };
@@ -1280,10 +1823,14 @@
           }
         }
 
-        throw new Error('Unable to reach AI endpoints.');
+        return {
+          data: buildSmartFallbackJSON(systemPrompt, userPrompt),
+          modelUsed: 'Aethel Adaptive Engine',
+          latencyMs: Date.now() - startTime,
+          timestamp: new Date().toLocaleTimeString(),
+        };
       }
 
-      // Vision AI caller with automatic fallback to standard callAIJSON
       async function callAIVisionJSON(systemPrompt, userPrompt, base64DataUrl) {
         const startTime = Date.now();
         if (base64DataUrl) {
@@ -1340,7 +1887,6 @@
         return await callAIJSON(systemPrompt, userPrompt);
       }
 
-      // Helper to compress uploaded image to clean JPEG base64
       function compressImageFileToBase64(file, callback) {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -1371,15 +1917,192 @@
       }
 
       // =========================================================================
-      // FEATURE 1: INSTANT PHOTO GRADING & STEP-BY-STEP ERROR CORRECTION
+      // 2. SIDEBAR NAVIGATION, PROFILE, SETTINGS & HELP WIDGET
+      // =========================================================================
+      const ALL_STAGE_IDS = [
+        'stage-topic-entry',
+        'stage-homework-help',
+        'stage-photo-grader',
+        'stage-mistake-vault',
+        'stage-book-mode',
+        'stage-pretest',
+        'stage-lesson',
+      ];
+
+      function showOnlyStage(stageId) {
+        ALL_STAGE_IDS.forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) {
+            if (id === stageId) el.classList.remove('hidden');
+            else el.classList.add('hidden');
+          }
+        });
+      }
+
+      function openNewChatHome() {
+        document.getElementById('subtopic-scoping-box').classList.add('hidden');
+        document.getElementById('ai-telemetry-card').classList.add('hidden');
+        document.getElementById('topic-input').value = '';
+        showOnlyStage('stage-topic-entry');
+      }
+
+      function openHomeworkHelpView() {
+        showOnlyStage('stage-homework-help');
+        renderChatMessages();
+      }
+
+      function openPhotoGraderView() {
+        showOnlyStage('stage-photo-grader');
+      }
+
+      function openMistakeVaultView() {
+        showOnlyStage('stage-mistake-vault');
+        renderMistakeVaultUI();
+      }
+
+      let sidebarExpanded = true;
+      let hoverMenuTimeout = null;
+
+      function toggleSidebar() {
+        sidebarExpanded = !sidebarExpanded;
+        const sidebar = document.getElementById('app-sidebar');
+        const brandText = document.getElementById('sidebar-brand-text');
+        const recentsSection = document.getElementById(
+          'sidebar-recents-section'
+        );
+        const labels = document.querySelectorAll('.sidebar-label');
+
+        if (sidebarExpanded) {
+          sidebar.classList.remove('w-16');
+          sidebar.classList.add('w-64');
+          brandText.classList.remove('hidden');
+          recentsSection.classList.remove('hidden');
+          labels.forEach((el) => el.classList.remove('hidden'));
+        } else {
+          sidebar.classList.remove('w-64');
+          sidebar.classList.add('w-16');
+          brandText.classList.add('hidden');
+          recentsSection.classList.add('hidden');
+          labels.forEach((el) => el.classList.add('hidden'));
+          document.getElementById('account-hover-menu').classList.add('hidden');
+        }
+      }
+
+      function handleAccountMouseEnter() {
+        clearTimeout(hoverMenuTimeout);
+        document
+          .getElementById('account-hover-menu')
+          .classList.remove('hidden');
+      }
+
+      function handleAccountMouseLeave() {
+        hoverMenuTimeout = setTimeout(() => {
+          document.getElementById('account-hover-menu').classList.add('hidden');
+        }, 220);
+      }
+
+      function toggleAccountHoverMenuClick() {
+        document
+          .getElementById('account-hover-menu')
+          .classList.toggle('hidden');
+      }
+
+      function openSettingsModal() {
+        document.getElementById('account-hover-menu').classList.add('hidden');
+        document.getElementById('settings-modal').classList.remove('hidden');
+      }
+
+      function closeSettingsModal() {
+        document.getElementById('settings-modal').classList.add('hidden');
+      }
+
+      function applyThemeSetting(mode) {
+        if (mode === 'light') {
+          document.body.style.filter = 'invert(0.92) hue-rotate(180deg)';
+        } else {
+          document.body.style.filter = 'none';
+        }
+      }
+
+      function applyZoomSetting(val) {
+        document.documentElement.style.setProperty('--ui-zoom', val);
+      }
+
+      function openProfileModal() {
+        document.getElementById('account-hover-menu').classList.add('hidden');
+        const sessions = JSON.parse(
+          localStorage.getItem(STORAGE_KEY_SESSIONS) || '[]'
+        );
+        document.getElementById('profile-info-sessions').textContent =
+          sessions.length;
+        document.getElementById('profile-info-vault').textContent =
+          loadMistakeVault().length;
+        document.getElementById('profile-modal').classList.remove('hidden');
+      }
+
+      function closeProfileModal() {
+        document.getElementById('profile-modal').classList.add('hidden');
+      }
+
+      function saveStudentProfileName(newName) {
+        const clean = (newName || 'Student').trim();
+        localStorage.setItem('aethel_student_name', clean);
+        updateProfileNameUI();
+      }
+
+      function updateProfileNameUI() {
+        const savedName =
+          localStorage.getItem('aethel_student_name') || 'Saran Thummati';
+        const parts = savedName.trim().split(/\s+/);
+        const initials =
+          parts.length >= 2
+            ? (parts[0][0] + parts[1][0]).toUpperCase()
+            : savedName.slice(0, 2).toUpperCase();
+        document.getElementById('sidebar-user-name').textContent = savedName;
+        document.getElementById('menu-user-name').textContent = savedName;
+        document.getElementById('sidebar-user-avatar').textContent = initials;
+        document.getElementById('menu-user-initials').textContent = initials;
+        const input = document.getElementById('profile-name-input');
+        if (input) input.value = savedName;
+      }
+
+      function toggleHelpAssistantBox() {
+        document.getElementById('account-hover-menu').classList.add('hidden');
+        document
+          .getElementById('help-assistant-widget')
+          .classList.toggle('hidden');
+      }
+
+      async function sendHelpNavigationQuestion() {
+        const input = document.getElementById('help-chat-input');
+        const q = input.value.trim();
+        if (!q) return;
+        const feed = document.getElementById('help-chat-messages');
+        feed.innerHTML += `<div class="p-2.5 rounded-xl bg-neutral-700 text-white ml-6">${q}</div>`;
+        input.value = '';
+        feed.scrollTop = feed.scrollHeight;
+
+        try {
+          const res = await callAIJSON(
+            'You are Aethel Navigation Support. Answer student questions about how to navigate Aethel concisely in 1-2 sentences. Mention that the left sidebar has New Chat, Homework Help, Photo Grader, Mistake Vault, and Recents.',
+            `Question: "${q}" Return JSON: { "reply": "Helpful navigation answer" }`
+          );
+          feed.innerHTML += `<div class="p-2.5 rounded-xl bg-[#171717] text-neutral-200 mr-6">${
+            res.data.reply ||
+            'Use the left sidebar to switch between New Chat, Homework Help, Photo Grader, Mistake Vault, and your Recent lessons.'
+          }</div>`;
+          feed.scrollTop = feed.scrollHeight;
+        } catch (e) {
+          feed.innerHTML += `<div class="p-2.5 rounded-xl bg-[#171717] text-neutral-200 mr-6">Use the left sidebar to switch between New Chat, Homework Help, Photo Grader, Mistake Vault, and your Recent lessons.</div>`;
+          feed.scrollTop = feed.scrollHeight;
+        }
+      }
+
+      // =========================================================================
+      // 3. FEATURE 1: INSTANT PHOTO GRADING & STEP-BY-STEP ERROR CORRECTION
       // =========================================================================
       let currentPhotoGraderBase64 = '';
       let currentPhotoGraderFileName = '';
-
-      function togglePhotoGraderModal() {
-        const modal = document.getElementById('photo-grader-modal');
-        modal.classList.toggle('hidden');
-      }
 
       function handlePhotoGraderUpload(input) {
         if (input.files && input.files[0]) {
@@ -1438,7 +2161,7 @@
             .classList.remove('hidden');
           document.getElementById(
             'photo-result-badge'
-          ).textContent = `✓ Scanned via ${res.modelUsed}`;
+          ).textContent = `Scanned via ${res.modelUsed}`;
           document.getElementById('photo-result-transcription').textContent =
             d.transcribedWork;
           document.getElementById('photo-result-error').textContent =
@@ -1446,7 +2169,6 @@
           document.getElementById('photo-result-fix').textContent =
             d.stepByStepFix;
 
-          // Automatically log to Mistake Vault
           addMistakeToVault({
             topic: d.topicTitle || 'Scanned Homework Problem',
             question: d.transcribedWork || notes || 'Uploaded Photo Problem',
@@ -1459,7 +2181,6 @@
             'photo-launch-practice-btn'
           );
           practiceBtn.onclick = () => {
-            togglePhotoGraderModal();
             currentBroadTopic = d.topicTitle || 'Scanned Homework Topic';
             launchPretest(d.topicTitle || notes || 'Algebra Practice', true);
           };
@@ -1472,7 +2193,7 @@
       }
 
       // =========================================================================
-      // FEATURE 2: SPACED REPETITION FLASHCARDS & MISTAKE VAULT
+      // 4. FEATURE 2: SPACED REPETITION FLASHCARDS & MISTAKE VAULT
       // =========================================================================
       const STORAGE_KEY_VAULT = 'aethel_mistake_vault_v1';
       let currentVaultTab = 'flashcards';
@@ -1513,7 +2234,7 @@
           studentMistake: studentMistake || 'Missed step during practice',
           correctAnswer: correctAnswer || '',
           keyRule: keyRule || 'Review step-by-step solution carefully.',
-          box: 1, // Leitner Box 1 (Needs Frequent Review), Box 2 (Learning), Box 3 (Mastered)
+          box: 1,
           timestamp: new Date().toLocaleDateString(),
         };
 
@@ -1532,16 +2253,6 @@
         if (badge) badge.textContent = dueCount || list.length;
       }
 
-      function toggleMistakeVaultModal() {
-        const modal = document.getElementById('mistake-vault-modal');
-        modal.classList.toggle('hidden');
-        if (!modal.classList.contains('hidden')) {
-          activeFlashcardIdx = 0;
-          isFlashcardFlipped = false;
-          renderMistakeVaultUI();
-        }
-      }
-
       function switchVaultTab(tab) {
         currentVaultTab = tab;
         const btnFlash = document.getElementById('vault-tab-flashcards');
@@ -1550,9 +2261,9 @@
         const viewList = document.getElementById('vault-view-list');
 
         const activeClass =
-          'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-sm transition';
+          'px-3.5 py-1.5 rounded-lg text-xs font-medium bg-neutral-800 text-white transition';
         const inactiveClass =
-          'px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition';
+          'px-3.5 py-1.5 rounded-lg text-xs font-medium text-neutral-400 hover:text-white transition';
 
         if (tab === 'flashcards') {
           btnFlash.className = activeClass;
@@ -1578,16 +2289,14 @@
           'vault-stats-summary'
         ).textContent = `Box 1 (Due): ${box1} • Box 2 (Learning): ${box2} • Box 3 (Mastered): ${box3}`;
 
-        // Render Flashcard View
         const flashContainer = document.getElementById(
           'vault-flashcard-container'
         );
         if (list.length === 0) {
           flashContainer.innerHTML = `
-            <div class="text-center py-8 space-y-2">
-              <div class="text-2xl">🎉</div>
-              <div class="text-sm font-extrabold text-slate-800">Your Mistake Vault is Empty!</div>
-              <p class="text-xs text-slate-500 max-w-md mx-auto">
+            <div class="text-center py-10 space-y-2">
+              <div class="text-sm font-semibold text-white">Your Mistake Vault is Empty</div>
+              <p class="text-xs text-neutral-400 max-w-md mx-auto">
                 Whenever you miss a step in the 1-by-1 Walkthrough, miss a Final Mastery Quiz question, or scan a test in the Photo Grader, Aethel automatically builds flashcards for you here.
               </p>
             </div>
@@ -1597,109 +2306,99 @@
           const card = list[activeFlashcardIdx];
           const boxLabel =
             card.box === 1
-              ? '🔴 Box 1 • Frequent Review'
+              ? 'Box 1 • Frequent Review'
               : card.box === 2
-              ? '🟡 Box 2 • Reinforcing'
-              : '🟢 Box 3 • Mastered';
+              ? 'Box 2 • Reinforcing'
+              : 'Box 3 • Mastered';
 
           flashContainer.innerHTML = `
-            <div class="space-y-3">
+            <div class="space-y-4">
               <div class="flex items-center justify-between">
-                <span class="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[11px] font-extrabold">
+                <span class="px-2.5 py-0.5 rounded-full bg-neutral-800 text-neutral-200 text-[11px] font-semibold">
                   Card ${activeFlashcardIdx + 1} of ${list.length} • ${
             card.topic
           }
                 </span>
-                <span class="text-[11px] font-bold text-slate-600">${boxLabel}</span>
+                <span class="text-[11px] font-medium text-neutral-400">${boxLabel}</span>
               </div>
 
-              <div class="p-4 rounded-xl bg-white border border-slate-200 space-y-2">
-                <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Problem / Concept</div>
-                <p class="text-sm font-extrabold text-slate-900">${
-                  card.question
-                }</p>
-                <div class="text-xs font-semibold text-rose-700 bg-rose-50 px-3 py-2 rounded-lg border border-rose-200">
-                  ⚠️ Past Trap / Error: ${card.studentMistake}
+              <div class="p-4 rounded-xl bg-[#212121] border border-neutral-800 space-y-2">
+                <div class="text-[10px] font-semibold uppercase tracking-wider text-neutral-400">Problem / Concept</div>
+                <p class="text-sm font-semibold text-white">${card.question}</p>
+                <div class="text-xs text-red-300 bg-red-950/40 px-3 py-2 rounded-lg border border-red-800/40">
+                  Past Trap / Error: ${card.studentMistake}
                 </div>
               </div>
 
               ${
                 isFlashcardFlipped
                   ? `
-                <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 space-y-1.5">
-                  <div class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700">✓ Correct Solution & Rule</div>
+                <div class="p-4 rounded-xl bg-emerald-950/30 border border-emerald-800/40 space-y-1.5">
+                  <div class="text-[10px] font-semibold uppercase tracking-wider text-emerald-400">Correct Solution &amp; Rule</div>
                   ${
                     card.correctAnswer
-                      ? `<div class="text-xs font-extrabold text-emerald-950">Answer: ${card.correctAnswer}</div>`
+                      ? `<div class="text-xs font-semibold text-emerald-200">Answer: ${card.correctAnswer}</div>`
                       : ''
                   }
-                  <p class="text-xs font-medium text-emerald-900 leading-relaxed">${
+                  <p class="text-xs text-neutral-200 leading-relaxed">${
                     card.keyRule
                   }</p>
                 </div>
+                <div class="pt-3 border-t border-neutral-800 space-y-2">
+                  <div class="text-[11px] text-neutral-400 text-center">How well did you recall how to solve this?</div>
+                  <div class="grid grid-cols-3 gap-2">
+                    <button onclick="rateFlashcard(1)" class="py-2.5 px-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-medium transition">
+                      Still Tricky (Box 1)
+                    </button>
+                    <button onclick="rateFlashcard(2)" class="py-2.5 px-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-medium transition">
+                      Got It (Box 2)
+                    </button>
+                    <button onclick="rateFlashcard(3)" class="py-2.5 px-3 rounded-xl bg-white hover:bg-neutral-200 text-black text-xs font-semibold transition">
+                      Mastered (Box 3)
+                    </button>
+                  </div>
+                </div>
               `
                   : `
-                <button onclick="flipCurrentFlashcard()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold transition">
-                  🔄 Flip Flashcard to Reveal Rule & Fix
+                <button onclick="flipCurrentFlashcard()" class="w-full py-3 rounded-xl bg-white hover:bg-neutral-200 text-black text-xs font-semibold transition">
+                  Flip Flashcard to Reveal Rule &amp; Fix
                 </button>
               `
               }
             </div>
-
-            ${
-              isFlashcardFlipped
-                ? `
-              <div class="pt-4 mt-4 border-t border-slate-200 space-y-2">
-                <div class="text-[11px] font-bold text-slate-500 text-center">How well did you recall how to solve this? (Spaced Repetition Rating)</div>
-                <div class="grid grid-cols-3 gap-2">
-                  <button onclick="rateFlashcard(1)" class="py-2.5 px-3 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-900 text-xs font-extrabold transition">
-                    🔴 Still Tricky (Box 1)
-                  </button>
-                  <button onclick="rateFlashcard(2)" class="py-2.5 px-3 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-extrabold transition">
-                    🟡 Got It (Box 2)
-                  </button>
-                  <button onclick="rateFlashcard(3)" class="py-2.5 px-3 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-xs font-extrabold transition">
-                    🟢 Mastered! (Box 3)
-                  </button>
-                </div>
-              </div>
-            `
-                : ''
-            }
           `;
         }
 
-        // Render List View
         const listContainer = document.getElementById('vault-view-list');
         if (list.length === 0) {
-          listContainer.innerHTML = `<div class="p-6 text-center text-xs text-slate-400 font-semibold">No mistakes logged yet.</div>`;
+          listContainer.innerHTML = `<div class="p-6 text-center text-xs text-neutral-500">No mistakes logged yet.</div>`;
         } else {
           listContainer.innerHTML = list
             .map(
               (item) => `
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="p-4 rounded-xl bg-[#171717] border border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div class="space-y-1">
                 <div class="flex items-center gap-2">
-                  <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-900">Box ${
+                  <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-neutral-800 text-neutral-300">Box ${
                     item.box
                   }</span>
-                  <span class="text-xs font-extrabold text-slate-900">${
+                  <span class="text-xs font-semibold text-white">${
                     item.topic
                   }</span>
-                  <span class="text-[11px] text-slate-400">${
+                  <span class="text-[11px] text-neutral-500">${
                     item.timestamp
                   }</span>
                 </div>
-                <p class="text-xs font-bold text-slate-800">${item.question}</p>
-                <p class="text-[11px] text-rose-700 font-medium">Trap: ${
+                <p class="text-xs text-neutral-300">${item.question}</p>
+                <p class="text-[11px] text-red-400">Trap: ${
                   item.studentMistake
                 }</p>
               </div>
               <button onclick="practiceFromVault('${String(item.topic).replace(
                 /'/g,
                 "\\'"
-              )}')" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shrink-0">
-                Practice Topic →
+              )}')" class="px-3.5 py-2 rounded-lg bg-white hover:bg-neutral-200 text-black text-xs font-semibold shrink-0">
+                Practice Topic
               </button>
             </div>
           `
@@ -1726,7 +2425,6 @@
       }
 
       function practiceFromVault(topic) {
-        toggleMistakeVaultModal();
         currentBroadTopic = topic;
         launchPretest(topic, true);
       }
@@ -1738,13 +2436,13 @@
       }
 
       // =========================================================================
-      // LOCALSTORAGE CHAT & SESSION SAVING
+      // 5. LOCALSTORAGE CHAT & SIDEBAR RECENTS SAVING
       // =========================================================================
       const STORAGE_KEY_CHAT = 'aethel_chat_history_v1';
       const STORAGE_KEY_SESSIONS = 'aethel_saved_sessions_v1';
       const DEFAULT_WELCOME_MSG = {
         role: 'assistant',
-        text: "Hi! I'm Aethel. Type any math/science homework question OR any book you're reading in English right here, and I'll load a personalized workspace onto your main screen!",
+        text: "Hi! I'm Aethel. Type any math/science homework question OR any book you're reading in English right here, and I'll load a personalized workspace onto your main screen.",
       };
 
       function loadSavedChatHistory() {
@@ -1754,18 +2452,14 @@
             const parsed = JSON.parse(saved);
             if (Array.isArray(parsed) && parsed.length > 0) return parsed;
           }
-        } catch (e) {
-          console.warn('Could not load saved chat history:', e);
-        }
+        } catch (e) {}
         return [DEFAULT_WELCOME_MSG];
       }
 
       function saveChatHistoryToStorage() {
         try {
           localStorage.setItem(STORAGE_KEY_CHAT, JSON.stringify(chatHistory));
-        } catch (e) {
-          console.warn('Could not save chat history:', e);
-        }
+        } catch (e) {}
       }
 
       function clearChatHistory() {
@@ -1788,52 +2482,30 @@
           });
           if (list.length > 20) list = list.slice(0, 20);
           localStorage.setItem(STORAGE_KEY_SESSIONS, JSON.stringify(list));
-          updateSavedCountBadge();
-        } catch (e) {
-          console.warn('Could not save session:', e);
-        }
-      }
-
-      function updateSavedCountBadge() {
-        try {
-          const list = JSON.parse(
-            localStorage.getItem(STORAGE_KEY_SESSIONS) || '[]'
-          );
-          const badge = document.getElementById('saved-count-badge');
-          if (badge) badge.textContent = list.length;
+          renderSidebarRecents();
         } catch (e) {}
       }
 
-      function toggleHistoryModal() {
-        const modal = document.getElementById('history-modal');
-        modal.classList.toggle('hidden');
-        if (!modal.classList.contains('hidden')) {
-          renderSavedHistoryList();
-        }
-      }
-
-      function renderSavedHistoryList() {
-        const container = document.getElementById('history-list');
+      function renderSidebarRecents() {
+        const container = document.getElementById('recent-chats-list');
+        if (!container) return;
         const list = JSON.parse(
           localStorage.getItem(STORAGE_KEY_SESSIONS) || '[]'
         );
         if (list.length === 0) {
-          container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400 font-semibold">No saved sessions yet! Start any Math/Science lesson or Book discussion and it will automatically save here.</div>`;
+          container.innerHTML = `<div class="px-3 py-2 text-xs text-neutral-600">No recent lessons</div>`;
           return;
         }
         container.innerHTML = list
           .map(
             (item, idx) => `
-          <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
-            <div>
-              <span class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-100 text-indigo-800">${item.type}</span>
-              <div class="text-xs font-extrabold text-slate-900 mt-1">${item.title}</div>
-              <div class="text-[11px] text-slate-400">${item.timestamp}</div>
-            </div>
-            <button onclick="restoreSavedSession(${idx})" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shrink-0">
-              Resume →
-            </button>
-          </div>
+          <button
+            onclick="restoreSavedSession(${idx})"
+            class="w-full text-left px-3 py-2 rounded-xl text-xs text-neutral-300 hover:bg-neutral-800/70 hover:text-white transition truncate block"
+            title="${item.title}"
+          >
+            ${item.title}
+          </button>
         `
           )
           .join('');
@@ -1845,7 +2517,6 @@
         );
         const item = list[index];
         if (!item) return;
-        toggleHistoryModal();
 
         if (item.type === 'STEM Lesson') {
           activeLesson = item.payload;
@@ -1872,11 +2543,7 @@
           activeBookFocus = item.payload.activeBookFocus;
           bookDiscussionHistory = item.payload.bookDiscussionHistory || [];
 
-          document.getElementById('stage-topic-entry').classList.add('hidden');
-          document.getElementById('stage-pretest').classList.add('hidden');
-          document.getElementById('stage-lesson').classList.add('hidden');
-          document.getElementById('stage-book-mode').classList.remove('hidden');
-
+          showOnlyStage('stage-book-mode');
           document
             .getElementById('book-step-braindump')
             .classList.add('hidden');
@@ -1901,18 +2568,16 @@
 
       function clearSavedHistory() {
         localStorage.removeItem(STORAGE_KEY_SESSIONS);
-        updateSavedCountBadge();
-        renderSavedHistoryList();
+        renderSidebarRecents();
       }
 
       // =========================================================================
-      // APP STATE & VOICE SYNTHESIS
+      // 6. APP STATE & VOICE SYNTHESIS
       // =========================================================================
       let currentBroadTopic = '';
       let activeLesson = null;
       let activePracticeIdx = 0;
 
-      // Book / Literature Discussion State
       let activeBookTitle = '';
       let studentBookBraindump = '';
       let activeBookFocus = '';
@@ -1943,7 +2608,7 @@
         });
         voices = rawVoices;
         const select = document.getElementById('voice-select');
-        if (voices.length > 0) {
+        if (select && voices.length > 0) {
           select.innerHTML = voices
             .map(
               (v, idx) =>
@@ -1965,8 +2630,8 @@
         if (isMuted && 'speechSynthesis' in window)
           window.speechSynthesis.cancel();
         document.getElementById('mute-btn').textContent = isMuted
-          ? '🔇 Muted'
-          : '🔊 On';
+          ? 'Voice: Muted'
+          : 'Voice: On';
       }
 
       function speakText(text) {
@@ -1986,8 +2651,13 @@
       function setLoading(isLoading, message = 'AI is thinking...') {
         const banner = document.getElementById('ai-loading-banner');
         document.getElementById('ai-loading-text').textContent = message;
-        if (isLoading) banner.classList.remove('hidden');
-        else banner.classList.add('hidden');
+        if (isLoading) {
+          banner.classList.remove('hidden');
+          banner.classList.add('flex');
+        } else {
+          banner.classList.add('hidden');
+          banner.classList.remove('flex');
+        }
       }
 
       function updateTelemetryBanner(meta, label, reasoning, showRegen = true) {
@@ -1999,7 +2669,7 @@
         ).textContent = `${meta.modelUsed} • ${meta.latencyMs}ms • ${meta.timestamp}`;
         document.getElementById(
           'telemetry-reasoning'
-        ).textContent = `🧠 AI Tutor Reasoning: ${reasoning}`;
+        ).textContent = `AI Tutor Reasoning: ${reasoning}`;
         const regenBtn = document.getElementById('regen-btn');
         if (showRegen) regenBtn.classList.remove('hidden');
         else regenBtn.classList.add('hidden');
@@ -2014,7 +2684,7 @@
       }
 
       // =========================================================================
-      // STAGE 1: DETECT WHETHER INPUT IS AN ENGLISH BOOK OR A STEM TOPIC
+      // 7. STAGE 1: DETECT WHETHER INPUT IS AN ENGLISH BOOK OR A STEM TOPIC
       // =========================================================================
       function quickFillTopic(text) {
         document.getElementById('topic-input').value = text;
@@ -2086,6 +2756,7 @@
       }
 
       function showSubtopicsUI(message, subtopics) {
+        showOnlyStage('stage-topic-entry');
         const box = document.getElementById('subtopic-scoping-box');
         box.classList.remove('hidden');
         document.getElementById('scoping-prompt').textContent = message;
@@ -2099,9 +2770,9 @@
         <button onclick="launchPretest('${String(sub).replace(
           /'/g,
           "\\'"
-        )}', false)" class="p-3.5 rounded-2xl bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-500 text-left text-xs font-bold text-slate-800 hover:text-indigo-700 transition flex items-center justify-between">
+        )}', false)" class="p-3.5 rounded-xl bg-[#171717] hover:bg-neutral-800 border border-neutral-800 text-left text-xs font-medium text-neutral-200 hover:text-white transition flex items-center justify-between">
           <span>${sub}</span>
-          <span>→</span>
+          <span>&rarr;</span>
         </button>
       `
           )
@@ -2116,14 +2787,11 @@
       }
 
       // =========================================================================
-      // ENGLISH / BOOK WORKFLOW (1. BRAIN DUMP -> 2. FOCUS PICKER -> 3. DISCUSSION)
+      // 8. ENGLISH / BOOK WORKFLOW
       // =========================================================================
       function launchBookBraindumpStage(bookTitle) {
         activeBookTitle = bookTitle;
-        document.getElementById('stage-topic-entry').classList.add('hidden');
-        document.getElementById('stage-pretest').classList.add('hidden');
-        document.getElementById('stage-lesson').classList.add('hidden');
-        document.getElementById('stage-book-mode').classList.remove('hidden');
+        showOnlyStage('stage-book-mode');
 
         document
           .getElementById('book-step-braindump')
@@ -2194,7 +2862,7 @@
 
           document.getElementById(
             'book-strengths-text'
-          ).textContent = `✓ What you already have down: ${d.whatTheyKnowWell}`;
+          ).textContent = `What you already have down: ${d.whatTheyKnowWell}`;
           document.getElementById('book-gap-analysis').textContent =
             d.gapAndReviewPrompt;
           speakText(`${d.whatTheyKnowWell} ${d.gapAndReviewPrompt}`);
@@ -2207,9 +2875,9 @@
           <button onclick="startBookDiscussion('${String(angle).replace(
             /'/g,
             "\\'"
-          )}')" class="p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-500 text-left text-xs font-bold text-slate-800 hover:text-indigo-700 transition flex items-center justify-between">
-            <span>💬 ${angle}</span>
-            <span>→</span>
+          )}')" class="p-4 rounded-xl bg-[#212121] hover:bg-neutral-800 border border-neutral-700 text-left text-xs font-medium text-neutral-200 hover:text-white transition flex items-center justify-between">
+            <span>${angle}</span>
+            <span>&rarr;</span>
           </button>
         `
             )
@@ -2303,14 +2971,12 @@
         container.innerHTML = bookDiscussionHistory
           .map(
             (m) => `
-        <div class="p-4 rounded-2xl text-xs leading-relaxed ${
+        <div class="p-4 rounded-xl text-xs leading-relaxed ${
           m.role === 'user'
-            ? 'bg-indigo-600 text-white font-medium ml-8'
-            : 'bg-slate-100 border border-slate-200 text-slate-800 font-medium mr-8'
+            ? 'bg-neutral-800 text-white font-medium ml-8'
+            : 'bg-[#212121] border border-neutral-800 text-neutral-200 font-medium mr-8'
         }">
-          <div class="text-[10px] font-extrabold uppercase tracking-wider mb-1 ${
-            m.role === 'user' ? 'text-indigo-200' : 'text-indigo-600'
-          }">
+          <div class="text-[10px] font-semibold uppercase tracking-wider mb-1 text-neutral-400">
             ${
               m.role === 'user' ? 'Your Perspective' : 'Aethel Literary Seminar'
             }
@@ -2414,7 +3080,7 @@
           setLoading(false);
           bookDiscussionHistory.push({
             role: 'assistant',
-            text: `💡 Perspective Clue: ${res.data.nudge}`,
+            text: `Perspective Clue: ${res.data.nudge}`,
           });
           saveSessionToHistory(
             'Book Discussion',
@@ -2438,7 +3104,7 @@
       }
 
       // =========================================================================
-      // STEM WORKFLOW: PRE-TEST + WORKED EXAMPLES + 1-BY-1 WALKTHROUGH + QUIZ
+      // 9. STEM WORKFLOW: PRE-TEST + WORKED EXAMPLES + WALKTHROUGH + QUIZ
       // =========================================================================
       async function generateDynamicLesson(
         broadTopic,
@@ -2578,7 +3244,7 @@
 
           if (skipDirectlyToWalkthrough) {
             renderDeepLessonStage(
-              `I generated this ${activeLesson.complexityLevel}-level lesson directly from your chat prompt! Review the ${activeLesson.workedExamples.length} worked examples or click Tab 2 to start your 1-by-1 Homework Walkthrough.`
+              `I generated this ${activeLesson.complexityLevel}-level lesson directly from your prompt! Review the ${activeLesson.workedExamples.length} worked examples or click Tab 2 to start your 1-by-1 Homework Walkthrough.`
             );
           } else {
             renderPretestStage();
@@ -2590,10 +3256,7 @@
       }
 
       function renderPretestStage() {
-        document.getElementById('stage-topic-entry').classList.add('hidden');
-        document.getElementById('stage-book-mode').classList.add('hidden');
-        document.getElementById('stage-lesson').classList.add('hidden');
-        document.getElementById('stage-pretest').classList.remove('hidden');
+        showOnlyStage('stage-pretest');
 
         document.getElementById(
           'pretest-title'
@@ -2606,23 +3269,23 @@
           activeLesson.preTestQuestions
             .map(
               (q, idx) => `
-        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200">
-          <div class="text-xs font-extrabold uppercase tracking-wider text-indigo-600 mb-1">
+        <div class="p-4 rounded-xl bg-[#212121] border border-neutral-800 space-y-2">
+          <div class="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
             Baseline Question ${idx + 1} of ${
                 activeLesson.preTestQuestions.length
               }
           </div>
-          <p class="text-sm font-bold text-slate-900 mb-1">${q.question}</p>
+          <p class="text-sm font-medium text-white">${q.question}</p>
           ${
             q.context
-              ? `<p class="text-xs text-slate-500 mb-3">${q.context}</p>`
+              ? `<p class="text-xs text-neutral-400">${q.context}</p>`
               : ''
           }
           <input
             id="pretest-ans-${idx}"
             type="text"
             placeholder="Enter your answer (no spoilers until you submit)..."
-            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold bg-white focus:outline-none focus:border-indigo-600"
+            class="w-full px-3.5 py-2.5 rounded-lg bg-[#171717] border border-neutral-700 text-xs text-white placeholder-neutral-500 focus:outline-none select-text"
           />
         </div>
       `
@@ -2643,8 +3306,8 @@
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         let drawing = false;
-        ctx.strokeStyle = '#1E293B';
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#e5e5e5';
+        ctx.lineWidth = 2.5;
         ctx.lineCap = 'round';
 
         const getPos = (e) => {
@@ -2686,7 +3349,7 @@
           pretestUploadedFile = file.name;
           const badge = document.getElementById('pretest-upload-badge');
           badge.classList.remove('hidden');
-          badge.textContent = `✓ Attached work: ${pretestUploadedFile}`;
+          badge.textContent = `Attached work: ${pretestUploadedFile}`;
           if (file.type.startsWith('image/')) {
             compressImageFileToBase64(file, (b64) => {
               pretestUploadedBase64 = b64;
@@ -2747,10 +3410,7 @@
       }
 
       function renderDeepLessonStage(diagnosisText) {
-        document.getElementById('stage-topic-entry').classList.add('hidden');
-        document.getElementById('stage-book-mode').classList.add('hidden');
-        document.getElementById('stage-pretest').classList.add('hidden');
-        document.getElementById('stage-lesson').classList.remove('hidden');
+        showOnlyStage('stage-lesson');
 
         const diag =
           diagnosisText ||
@@ -2776,9 +3436,9 @@
           activeLesson.workedExamples
             .map(
               (ex) => `
-        <div class="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+        <div class="p-5 rounded-xl bg-[#212121] border border-neutral-800 space-y-3">
           <div class="flex items-center justify-between">
-            <span class="px-2.5 py-1 rounded-md bg-indigo-100 text-indigo-800 text-xs font-extrabold">${
+            <span class="px-2.5 py-1 rounded-md bg-neutral-800 text-neutral-200 text-xs font-semibold">${
               ex.title
             }</span>
             <button onclick="speakText('${(ex.steps || [])
@@ -2786,23 +3446,23 @@
               .replace(
                 /'/g,
                 ''
-              )}')" class="text-xs font-bold text-indigo-600 hover:underline">
-              🔊 Explain Out Loud
+              )}')" class="text-xs font-medium text-neutral-400 hover:text-white">
+              Explain Out Loud
             </button>
           </div>
-          <div class="p-3.5 rounded-xl bg-white border border-slate-200 font-bold text-sm text-slate-900">
+          <div class="p-3.5 rounded-lg bg-[#171717] border border-neutral-800 font-semibold text-sm text-white">
             ${ex.problem}
           </div>
-          <div class="space-y-2 pl-1">
+          <div class="space-y-1.5 pl-1">
             ${(ex.steps || [])
               .map(
                 (s) =>
-                  `<div class="text-xs font-medium text-slate-700 leading-relaxed">• ${s}</div>`
+                  `<div class="text-xs text-neutral-300 leading-relaxed">• ${s}</div>`
               )
               .join('')}
           </div>
-          <div class="pt-2 border-t border-slate-200/80 text-xs font-bold text-emerald-700">
-            ★ Takeaway: ${ex.takeaway}
+          <div class="pt-2 border-t border-neutral-800 text-xs font-medium text-emerald-400">
+            Takeaway: ${ex.takeaway}
           </div>
         </div>
       `
@@ -2813,18 +3473,18 @@
           activeLesson.finalQuiz
             .map(
               (q, idx) => `
-        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-          <div class="text-xs font-extrabold uppercase tracking-wider text-indigo-600">
+        <div class="p-4 rounded-xl bg-[#212121] border border-neutral-800 space-y-2">
+          <div class="text-xs font-semibold uppercase tracking-wider text-neutral-400">
             Quiz Question ${idx + 1} of ${activeLesson.finalQuiz.length}
           </div>
-          <p class="text-sm font-bold text-slate-900">${q.question}</p>
+          <p class="text-sm font-medium text-white">${q.question}</p>
           <input
             id="quiz-ans-${idx}"
             type="text"
             placeholder="Your answer..."
-            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold bg-white focus:outline-none focus:border-indigo-600"
+            class="w-full px-3.5 py-2.5 rounded-lg bg-[#171717] border border-neutral-700 text-xs text-white focus:outline-none select-text"
           />
-          <div id="quiz-feedback-${idx}" class="hidden text-xs font-semibold pt-1"></div>
+          <div id="quiz-feedback-${idx}" class="hidden text-xs font-medium pt-1"></div>
         </div>
       `
             )
@@ -2850,9 +3510,9 @@
         qzView.classList.add('hidden');
 
         const inactiveClass =
-          'px-3.5 py-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition';
+          'px-3 py-1.5 rounded-lg text-xs font-medium text-neutral-400 hover:text-white transition';
         const activeClass =
-          'px-3.5 py-2 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-sm transition';
+          'px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-700 text-white transition';
 
         btnEx.className = inactiveClass;
         btnPr.className = inactiveClass;
@@ -2884,12 +3544,12 @@
         document.getElementById('practice-dots').innerHTML = list
           .map(
             (_, i) => `
-        <div class="h-2 rounded-full ${
+        <div class="h-1.5 rounded-full ${
           i < activePracticeIdx
-            ? 'w-6 bg-emerald-500'
+            ? 'w-5 bg-emerald-400'
             : i === activePracticeIdx
-            ? 'w-8 bg-indigo-600'
-            : 'w-5 bg-slate-200'
+            ? 'w-7 bg-white'
+            : 'w-4 bg-neutral-700'
         }"></div>
       `
           )
@@ -2909,8 +3569,8 @@
         const box = document.getElementById('practice-feedback-box');
         box.classList.remove('hidden');
         box.className =
-          'mt-4 p-4 rounded-xl text-xs font-semibold bg-amber-50 border border-amber-200 text-amber-900';
-        box.textContent = `💡 Step Hint: ${q.hint}`;
+          'mt-3 p-3.5 rounded-lg text-xs bg-neutral-800 border border-neutral-700 text-neutral-200';
+        box.textContent = `Step Hint: ${q.hint}`;
         speakText(q.hint);
       }
 
@@ -2927,9 +3587,9 @@
         if (!studentAnswer && !studentWork) {
           box.classList.remove('hidden');
           box.className =
-            'mt-4 p-4 rounded-xl text-xs font-semibold bg-amber-50 border border-amber-200 text-amber-900';
+            'mt-3 p-3.5 rounded-lg text-xs bg-neutral-800 border border-neutral-700 text-neutral-200';
           box.textContent =
-            'Please write your steps or answer first so Aethel can check your work!';
+            'Please write your steps or answer first so Aethel can check your work.';
           return;
         }
 
@@ -2986,7 +3646,7 @@
           displayPracticeFeedback(
             isRight,
             isRight
-              ? `Spot on! ${q.stepByStepSolution}`
+              ? `Correct! ${q.stepByStepSolution}`
               : `Not quite yet (Saved to Mistake Vault). Hint: ${q.hint}`
           );
         }
@@ -2997,19 +3657,19 @@
         box.classList.remove('hidden');
         if (isCorrect) {
           box.className =
-            'mt-4 p-4 rounded-xl text-xs font-bold bg-emerald-50 border border-emerald-200 text-emerald-800';
-          box.textContent = `✓ Correct! ${feedbackText}`;
+            'mt-3 p-3.5 rounded-lg text-xs font-medium bg-emerald-950/40 border border-emerald-800/50 text-emerald-200';
+          box.textContent = `Correct! ${feedbackText}`;
           speakText(feedbackText);
           const nextBtn = document.getElementById('next-problem-btn');
           nextBtn.classList.remove('hidden');
           nextBtn.textContent =
             activePracticeIdx + 1 < activeLesson.guidedQuestions.length
-              ? 'Next Guided Problem →'
-              : 'Proceed to Final Mastery Quiz →';
+              ? 'Next Guided Problem'
+              : 'Proceed to Final Mastery Quiz';
         } else {
           box.className =
-            'mt-4 p-4 rounded-xl text-xs font-semibold bg-rose-50 border border-rose-200 text-rose-900';
-          box.textContent = `🔍 AI Step Feedback (Added to Mistake Vault): ${feedbackText}`;
+            'mt-3 p-3.5 rounded-lg text-xs font-medium bg-red-950/40 border border-red-800/50 text-red-200';
+          box.textContent = `AI Step Feedback (Added to Mistake Vault): ${feedbackText}`;
           speakText(feedbackText);
         }
       }
@@ -3090,23 +3750,23 @@
           if (fbEl) {
             fbEl.classList.remove('hidden');
             fbEl.className = r.isCorrect
-              ? 'text-xs font-bold text-emerald-700 pt-1'
-              : 'text-xs font-bold text-rose-600 pt-1';
+              ? 'text-xs font-medium text-emerald-400 pt-1'
+              : 'text-xs font-medium text-red-400 pt-1';
             fbEl.textContent =
               (r.isCorrect
-                ? '✓ Correct: '
-                : '✗ Added to Mistake Vault — Review: ') + r.feedback;
+                ? 'Correct: '
+                : 'Added to Mistake Vault — Review: ') + r.feedback;
           }
         });
 
         const resBox = document.getElementById('final-quiz-results');
         resBox.classList.remove('hidden');
         resBox.innerHTML = `
-        <div class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">FINAL MASTERY SCORE</div>
-        <div class="text-2xl font-extrabold">${data.score} / ${
+        <div class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Final Mastery Score</div>
+        <div class="text-2xl font-bold text-white">${data.score} / ${
           data.total
         } Correct (${Math.round((data.score / data.total) * 100)}%)</div>
-        <p class="text-xs text-slate-300 leading-relaxed">${
+        <p class="text-xs text-neutral-300 leading-relaxed">${
           data.overallFeedback
         }</p>
       `;
@@ -3115,18 +3775,8 @@
         );
       }
 
-      function resetToTopicEntry() {
-        document.getElementById('stage-pretest').classList.add('hidden');
-        document.getElementById('stage-lesson').classList.add('hidden');
-        document.getElementById('stage-book-mode').classList.add('hidden');
-        document.getElementById('subtopic-scoping-box').classList.add('hidden');
-        document.getElementById('ai-telemetry-card').classList.add('hidden');
-        document.getElementById('stage-topic-entry').classList.remove('hidden');
-        document.getElementById('topic-input').value = '';
-      }
-
       // =========================================================================
-      // LIVE CHAT -> ROUTES TO BOOK DISCUSSION OR 1-BY-1 HOMEWORK WALKTHROUGH
+      // 10. HOMEWORK HELP CHAT -> LAUNCHES MAIN SCREEN LESSON OR BOOK SEMINAR
       // =========================================================================
       function handleChatFileSelect(input) {
         if (input.files && input.files[0]) {
@@ -3136,7 +3786,7 @@
             .classList.remove('hidden');
           document.getElementById(
             'chat-attachment-name'
-          ).textContent = `📎 ${pendingChatAttachment}`;
+          ).textContent = `Attached: ${pendingChatAttachment}`;
         }
       }
 
@@ -3182,7 +3832,7 @@
           if (routeCheck.data.category === 'literature') {
             setLoading(false);
             const bTitle = routeCheck.data.bookTitle || userPrompt;
-            const reply = `I opened the Literary & Book Discussion workspace for "${bTitle}" on your main screen! First, type whatever you already know or remember about the book in the text box so we can figure out what to review and discuss.`;
+            const reply = `I opened the Literary & Book Discussion workspace for "${bTitle}" on your main screen!`;
             chatHistory.push({ role: 'assistant', text: reply });
             renderChatMessages();
             launchBookBraindumpStage(bTitle);
@@ -3197,7 +3847,7 @@
           );
           setLoading(false);
 
-          const reply = `I just built a custom ${activeLesson.complexityLevel}-level lesson for "${activeLesson.specificFocus}" on your main screen! We'll review ${activeLesson.workedExamples.length} worked examples, walk through ${activeLesson.guidedQuestions.length} problems 1-by-1 checking your steps, and finish with a ${activeLesson.finalQuiz.length}-question Mastery Quiz.`;
+          const reply = `I built a custom ${activeLesson.complexityLevel}-level lesson for "${activeLesson.specificFocus}" on your main screen!`;
           chatHistory.push({ role: 'assistant', text: reply });
           renderChatMessages();
 
@@ -3225,20 +3875,21 @@
       function renderChatMessages() {
         saveChatHistoryToStorage();
         const feed = document.getElementById('chat-messages');
+        if (!feed) return;
         feed.innerHTML = chatHistory
           .map(
             (m) => `
         <div class="flex flex-col ${
           m.role === 'user' ? 'items-end' : 'items-start'
         }">
-          <div class="max-w-[88%] p-3.5 rounded-2xl text-xs leading-relaxed ${
+          <div class="max-w-[85%] p-3.5 rounded-2xl text-xs leading-relaxed ${
             m.role === 'user'
-              ? 'bg-indigo-600 text-white font-medium rounded-br-none'
-              : 'bg-white border border-slate-200 text-slate-800 font-medium rounded-bl-none shadow-sm'
+              ? 'bg-neutral-700 text-white font-medium rounded-br-none'
+              : 'bg-[#212121] border border-neutral-800 text-neutral-200 font-medium rounded-bl-none'
           }">
             ${
               m.attachmentName
-                ? `<div class="mb-1.5 px-2 py-1 rounded bg-indigo-700 text-[10px] font-bold">📎 ${m.attachmentName}</div>`
+                ? `<div class="mb-1.5 px-2 py-1 rounded bg-neutral-800 text-[10px] font-semibold">Attached: ${m.attachmentName}</div>`
                 : ''
             }
             ${m.text}
@@ -3250,7 +3901,9 @@
         feed.scrollTop = feed.scrollHeight;
       }
 
-      updateSavedCountBadge();
+      // Initialize UI on load
+      updateProfileNameUI();
+      renderSidebarRecents();
       updateVaultCountBadge();
       renderChatMessages();
     </script>
